@@ -1,0 +1,20 @@
+Custom Placeholders:
+  prefix: "<bold><gradient:#E58D14:#EEB842>UltimateTimber</gradient></bold> <dark_gray>| "
+
+Command:
+  Help:
+    Header: "<prefix> <gold>Available Commands:"
+    Toggle: "  <yellow>/ut toggle <dark_gray>- <gray>Toggle chopping mode"
+    Give: "  <yellow>/ut give <player> <dark_gray>- <gray>Give the required axe"
+    Reload: "  <yellow>/ut reload <dark_gray>- <gray>Reload configuration and locale"
+  Toggle:
+    Enabled: "<prefix> <gray>Chopping mode: <green>Enabled"
+    Disabled: "<prefix> <gray>Chopping mode: <red>Disabled"
+  Give:
+    Given: "<prefix> <gray>Given required axe to <green><player><gray>."
+    No Axe: "<prefix> <red>Could not load the required axe item."
+  Reload:
+    Reloaded: "<prefix> <green>Configuration and locale files have been reloaded."
+
+Event:
+  On Cooldown: "<prefix> <yellow>You are on cooldown and cannot topple trees right now."

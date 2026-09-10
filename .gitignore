@@ -1,0 +1,34 @@
+# User-specific stuff
+.idea/
+
+*.iml
+*.ipr
+*.iws
+
+# Build output
+target/
+
+# Maven generated files
+dependency-reduced-pom.xml
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+flattened-pom.xml
+.flattened-pom.xml
+
+# Compiled and packaged files
+*.class
+*.jar
+*.war
+
+# Runtime data
+run/
+
+# IDE/compiler output
+out/
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.songoda</groupId>
+        <artifactId>UltimateTimber</artifactId>
+        <version>5.0.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>UltimateTimber-API</artifactId>
+    <packaging>jar</packaging>
+
+    <name>UltimateTimber API</name>
+    <description>Public API contracts for UltimateTimber.</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.songoda</groupId>
+            <artifactId>SongodaCore</artifactId>
+            <version>${songoda.core.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>net.vortexdevelopment</groupId>
+            <artifactId>VortexCore</artifactId>
+            <version>${vortexcore.version}</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+</project>

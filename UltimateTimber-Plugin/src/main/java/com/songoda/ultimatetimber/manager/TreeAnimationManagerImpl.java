@@ -1,6 +1,7 @@
 package com.songoda.ultimatetimber.manager;
 
 import com.songoda.core.vortexcore.hooks.internal.ReloadHook;
+import com.songoda.core.vortexcore.vinject.annotation.RegisterReloadHook;
 import com.songoda.ultimatetimber.UltimateTimber;
 import com.songoda.ultimatetimber.animation.TreeAnimationCrumble;
 import com.songoda.ultimatetimber.animation.TreeAnimationDisintegrate;
@@ -19,9 +20,8 @@ import com.songoda.ultimatetimber.utils.ParticleUtils;
 import com.songoda.ultimatetimber.utils.SoundUtils;
 import net.vortexdevelopment.vinject.annotation.Inject;
 import net.vortexdevelopment.vinject.annotation.component.Component;
-import com.songoda.core.vortexcore.vinject.annotation.RegisterReloadHook;
 import net.vortexdevelopment.vinject.annotation.lifecycle.OnDestroy;
-import net.vortexdevelopment.vinject.annotation.lifecycle.OnLoad;
+import net.vortexdevelopment.vinject.annotation.lifecycle.PostConstruct;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
@@ -54,8 +54,8 @@ public class TreeAnimationManagerImpl implements TreeAnimationManager, ReloadHoo
     private final Set<TreeAnimation> activeAnimations = ConcurrentHashMap.newKeySet();
     private BukkitTask task;
 
-    @OnLoad
-    public void onLoad() {
+    @PostConstruct
+    public void initialize() {
         UltimateTimber plugin = UltimateTimber.getInstance();
         this.task = Bukkit.getScheduler().runTaskTimer(plugin, this, 0L, 1L);
     }

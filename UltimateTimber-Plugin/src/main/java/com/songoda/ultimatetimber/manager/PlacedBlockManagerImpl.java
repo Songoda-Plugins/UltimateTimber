@@ -1,11 +1,12 @@
 package com.songoda.ultimatetimber.manager;
 
 import com.songoda.core.vortexcore.hooks.internal.ReloadHook;
+import com.songoda.core.vortexcore.vinject.annotation.RegisterReloadHook;
 import com.songoda.ultimatetimber.api.manager.PlacedBlockManager;
 import com.songoda.ultimatetimber.config.TimberConfig;
 import net.vortexdevelopment.vinject.annotation.Inject;
 import net.vortexdevelopment.vinject.annotation.component.Component;
-import com.songoda.core.vortexcore.vinject.annotation.RegisterReloadHook;
+import net.vortexdevelopment.vinject.annotation.lifecycle.PostConstruct;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.jetbrains.annotations.NotNull;
@@ -36,6 +37,11 @@ public class PlacedBlockManagerImpl implements PlacedBlockManager, ReloadHook {
                 return this.size() > (maxPlacedBlockMemorySize > 0 ? maxPlacedBlockMemorySize : 5000);
             }
         }));
+    }
+
+    @PostConstruct
+    public void initialize() {
+        onReload();
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.songoda.ultimatetimber.manager;
 
 import com.songoda.core.vortexcore.hooks.internal.ReloadHook;
+import com.songoda.core.vortexcore.vinject.annotation.RegisterReloadHook;
 import com.songoda.ultimatetimber.UltimateTimber;
 import com.songoda.ultimatetimber.api.manager.BlockReplacementManager;
 import com.songoda.ultimatetimber.api.manager.SaplingManager;
@@ -9,9 +10,8 @@ import com.songoda.ultimatetimber.api.tree.TreeDefinition;
 import com.songoda.ultimatetimber.config.TimberConfig;
 import net.vortexdevelopment.vinject.annotation.Inject;
 import net.vortexdevelopment.vinject.annotation.component.Component;
-import com.songoda.core.vortexcore.vinject.annotation.RegisterReloadHook;
 import net.vortexdevelopment.vinject.annotation.lifecycle.OnDestroy;
-import net.vortexdevelopment.vinject.annotation.lifecycle.OnLoad;
+import net.vortexdevelopment.vinject.annotation.lifecycle.PostConstruct;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -40,8 +40,8 @@ public class BlockReplacementManagerImpl implements BlockReplacementManager, Rel
     private int maxPerTick = 1000;
     private BukkitTask task;
 
-    @OnLoad
-    public void onLoad() {
+    @PostConstruct
+    public void initialize() {
         onReload();
         UltimateTimber plugin = UltimateTimber.getInstance();
         this.task = Bukkit.getScheduler().runTaskTimer(plugin, this, 0L, 1L);

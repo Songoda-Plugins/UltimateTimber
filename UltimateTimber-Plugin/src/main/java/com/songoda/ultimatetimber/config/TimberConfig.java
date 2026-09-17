@@ -1,5 +1,6 @@
 package com.songoda.ultimatetimber.config;
 
+import com.songoda.core.vortexcore.vinject.annotation.RegisterReloadHook;
 import com.songoda.ultimatetimber.config.entry.GlobalLootConfig;
 import com.songoda.ultimatetimber.config.entry.HooksConfig;
 import com.songoda.ultimatetimber.config.entry.QueuedBlockReplacementConfig;
@@ -7,7 +8,6 @@ import com.songoda.ultimatetimber.config.entry.RequiredAxeConfig;
 import com.songoda.ultimatetimber.config.entry.TreeConfigEntry;
 import lombok.Getter;
 import lombok.Setter;
-import com.songoda.core.vortexcore.vinject.annotation.RegisterReloadHook;
 import net.vortexdevelopment.vinject.annotation.lifecycle.OnLoad;
 import net.vortexdevelopment.vinject.annotation.yaml.Comment;
 import net.vortexdevelopment.vinject.annotation.yaml.Key;
@@ -27,6 +27,7 @@ import java.util.Set;
  */
 @Getter
 @Setter
+@RegisterReloadHook(priority = 100)
 @YamlConfiguration(file = "config.yml")
 public class TimberConfig {
 

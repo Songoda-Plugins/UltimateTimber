@@ -2,6 +2,7 @@ package com.songoda.ultimatetimber.manager;
 
 import com.songoda.core.vortexcore.hooks.internal.ReloadHook;
 import com.songoda.core.vortexcore.text.AdventureUtils;
+import com.songoda.core.vortexcore.vinject.annotation.RegisterReloadHook;
 import com.songoda.ultimatetimber.UltimateTimber;
 import com.songoda.ultimatetimber.api.manager.TreeDefinitionManager;
 import com.songoda.ultimatetimber.api.tree.TreeBlock;
@@ -17,8 +18,7 @@ import com.songoda.ultimatetimber.tree.TreeDefinitionImpl;
 import com.songoda.ultimatetimber.utils.BlockUtils;
 import net.vortexdevelopment.vinject.annotation.Inject;
 import net.vortexdevelopment.vinject.annotation.component.Component;
-import com.songoda.core.vortexcore.vinject.annotation.RegisterReloadHook;
-import net.vortexdevelopment.vinject.annotation.lifecycle.OnLoad;
+import net.vortexdevelopment.vinject.annotation.lifecycle.PostConstruct;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -64,8 +64,8 @@ public class TreeDefinitionManagerImpl implements TreeDefinitionManager, ReloadH
     private ItemStack requiredAxe;
     private NamespacedKey requiredAxePdcKey;
 
-    @OnLoad
-    public void onLoad() {
+    @PostConstruct
+    public void initialize() {
         onReload();
     }
 

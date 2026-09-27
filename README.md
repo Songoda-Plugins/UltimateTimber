@@ -11,8 +11,7 @@
 > installation instructions, compatibility information, updates, and support,
 > visit the Songoda Reborn page above.
 
-UltimateTimber is a Minecraft tree-felling server plugin developed and maintained by
-**Songoda Reborn**.
+UltimateTimber is a Minecraft tree-felling server plugin developed and maintained by **Songoda Reborn**.
 
 It provides tree detection, animated falling blocks, custom drops, configurable sounds,
 and alternative tree-cutting behavior.
@@ -25,19 +24,22 @@ and alternative tree-cutting behavior.
 [![bStats Servers][bStats shield]][bStats page]
 </div>
 
-
 ## Downloads
+
 Downloads and supported Minecraft versions are available from the
 [Songoda Reborn plugin page][Plugin page].
 
 ## Documentation
+
 The [UltimateTimber wiki][Plugin wiki] is maintained by Songoda Reborn and covers
 installation, configuration, commands, permissions, dependencies, and compatibility.
 
 ## Support
+
 For help with UltimateTimber, join our [Discord server][Discord invite].
 
 ## Suggestions
+
 Share feature suggestions and feedback through our [Discord server][Discord invite].
 
 

@@ -7,18 +7,18 @@ import com.songoda.ultimatetimber.api.tree.TreeBlock;
 import com.songoda.ultimatetimber.api.tree.TreeBlockType;
 import com.songoda.ultimatetimber.api.tree.TreeDefinition;
 import com.songoda.ultimatetimber.config.TimberConfig;
+import com.songoda.core.vortexcore.compatibility.folia.SchedulerUtils;
 import net.vortexdevelopment.vinject.annotation.Inject;
 import net.vortexdevelopment.vinject.annotation.component.Component;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Service handling sapling replanting and temporary protection after tree felling.
@@ -26,14 +26,14 @@ import java.util.Set;
 @Component
 public class SaplingManagerImpl implements SaplingManager {
 
+    private final Random random = new Random();
+    private final Set<Location> protectedSaplings = ConcurrentHashMap.newKeySet();
     @Inject
     private TimberConfig config;
-
     @Inject
     private TreeDefinitionManager treeDefinitionManager;
-
-    private final Random random = new Random();
-    private final Set<Location> protectedSaplings = new HashSet<>();
+    @Inject
+    private UltimateTimber plugin;
 
     @Override
     public void replantSapling(@NotNull TreeDefinition treeDefinition, @NotNull TreeBlock<?> treeBlock) {
@@ -41,18 +41,33 @@ public class SaplingManagerImpl implements SaplingManager {
             return;
         }
 
-        Block block = treeBlock.getLocation().getBlock();
-        if (!block.getType().isAir() || treeBlock.getTreeBlockType() == TreeBlockType.LEAF) {
+        Location location = treeBlock.getLocation();
+        if (!SchedulerUtils.isOwnedByCurrentRegion(location)) {
+            SchedulerUtils.runLocationTask(plugin, location, () -> this.replantSapling(treeDefinition, treeBlock));
             return;
         }
 
-        UltimateTimber plugin = UltimateTimber.getInstance();
-        Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () -> internalReplant(treeDefinition, treeBlock), 1L);
+        Block block = location.getBlock();
+        if (!block.getType().isAir() || treeBlock.treeBlockType() == TreeBlockType.LEAF) {
+            return;
+        }
+
+        SchedulerUtils.runLocationTaskLater(plugin, location, () -> internalReplant(treeDefinition, treeBlock), 1L);
     }
 
     @Override
     public void replantSaplingWithChance(@NotNull TreeDefinition treeDefinition, @NotNull TreeBlock<?> treeBlock) {
-        if (this.config == null || !this.config.isFallingBlocksReplantSaplings() || !treeBlock.getLocation().getBlock().getType().isAir()) {
+        if (this.config == null || !this.config.isFallingBlocksReplantSaplings()) {
+            return;
+        }
+
+        Location location = treeBlock.getLocation();
+        if (!SchedulerUtils.isOwnedByCurrentRegion(location)) {
+            SchedulerUtils.runLocationTask(plugin, location, () -> this.replantSaplingWithChance(treeDefinition, treeBlock));
+            return;
+        }
+
+        if (!location.getBlock().getType().isAir()) {
             return;
         }
 
@@ -61,8 +76,7 @@ public class SaplingManagerImpl implements SaplingManager {
             return;
         }
 
-        UltimateTimber plugin = UltimateTimber.getInstance();
-        Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () -> internalReplant(treeDefinition, treeBlock), 1L);
+        SchedulerUtils.runLocationTaskLater(plugin, location, () -> internalReplant(treeDefinition, treeBlock), 1L);
     }
 
     @Override
@@ -90,8 +104,7 @@ public class SaplingManagerImpl implements SaplingManager {
         if (cooldown > 0) {
             Location loc = block.getLocation();
             this.protectedSaplings.add(loc);
-            UltimateTimber plugin = UltimateTimber.getInstance();
-            Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () -> this.protectedSaplings.remove(loc), cooldown * 20L);
+            SchedulerUtils.runLocationTaskLater(plugin, loc, () -> this.protectedSaplings.remove(loc), cooldown * 20L);
         }
     }
 }

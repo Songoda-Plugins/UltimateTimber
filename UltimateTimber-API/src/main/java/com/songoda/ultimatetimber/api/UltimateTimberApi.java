@@ -26,19 +26,23 @@ public final class UltimateTimberApi {
     private static final NamespacedKey CUSTOM_EXE_KEY = new NamespacedKey("ultimatetimber", "custom_axe");
 
     @Inject @Getter private static Plugin plugin;
+
     @Inject @Getter private static TreeDetectionManager treeDetectionManager;
+
     @Inject @Getter private static TreeFallManager treeFallManager;
+
     @Inject @Getter private static TreeAnimationManager treeAnimationManager;
+
     @Inject @Getter private static ChoppingManager choppingManager;
+
     @Inject @Getter private static SaplingManager saplingManager;
+
     @Inject @Getter private static BlockReplacementManager blockReplacementManager;
+
     @Inject @Getter private static PlacedBlockManager placedBlockManager;
+
     @Inject @Getter private static TreeDefinitionManager treeDefinitionManager;
 
     private UltimateTimberApi() {
-    }
-
-    public static boolean isCustomAxe(ItemStack itemStack) {
-        return itemStack.getPersistentDataContainer().has(CUSTOM_EXE_KEY);
     }
 }

@@ -1,11 +1,11 @@
 package com.songoda.ultimatetimber.config.entry;
 
+import com.songoda.core.SongodaPlugin;
 import lombok.Getter;
 import lombok.Setter;
 import net.vortexdevelopment.vinject.annotation.lifecycle.OnLoad;
 import net.vortexdevelopment.vinject.annotation.yaml.Key;
 import net.vortexdevelopment.vinject.annotation.yaml.YamlItem;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.jetbrains.annotations.Nullable;
 
@@ -33,7 +33,7 @@ public class LootConfigEntry {
         if (this.material != null && !this.material.trim().isEmpty()) {
             this.resolvedMaterial = Material.matchMaterial(this.material.trim());
             if (this.resolvedMaterial == null) {
-                Bukkit.getLogger().warning("[UltimateTimber] Warning: Invalid material '" + this.material + "' in loot entry - skipping material drop.");
+                SongodaPlugin.getInstance().getLogger().warning("[UltimateTimber] Warning: Invalid material '" + this.material + "' in loot entry - skipping material drop.");
             }
         }
     }

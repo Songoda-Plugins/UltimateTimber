@@ -53,8 +53,8 @@ public class PlacedBlockListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onTreeFell(TreeFellEvent event) {
-        for (TreeBlock<?> treeBlock : event.getDetectedTree().getDetectedTreeBlocks().getAllTreeBlocks()) {
-            if (treeBlock.getBlock() instanceof Block block) {
+        for (TreeBlock<?> treeBlock : event.getDetectedTree().detectedTreeBlocks().getAllTreeBlocks()) {
+            if (treeBlock.block() instanceof Block block) {
                 this.placedBlockManager.protectBlock(block, false);
             }
         }

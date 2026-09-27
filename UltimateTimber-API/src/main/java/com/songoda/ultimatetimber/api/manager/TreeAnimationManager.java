@@ -17,7 +17,7 @@ public interface TreeAnimationManager {
      * Plays the appropriate tree animation for the felled tree and player.
      *
      * @param detectedTree The felled tree
-     * @param player The player who felled the tree
+     * @param player       The player who felled the tree
      */
     void runAnimation(@NotNull DetectedTree detectedTree, @NotNull Player player);
 
@@ -41,7 +41,7 @@ public interface TreeAnimationManager {
      * Handles the impact and landing logic when an animated falling block touches the ground.
      *
      * @param treeAnimation The parent tree animation
-     * @param treeBlock The falling tree block that landed
+     * @param treeBlock     The falling tree block that landed
      */
     void runFallingBlockImpact(@NotNull TreeAnimation treeAnimation, @NotNull TreeBlock<FallingBlock> treeBlock);
 }

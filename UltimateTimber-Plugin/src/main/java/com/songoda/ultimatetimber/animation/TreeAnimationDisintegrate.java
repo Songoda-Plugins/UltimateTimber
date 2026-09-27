@@ -1,108 +1,185 @@
 package com.songoda.ultimatetimber.animation;
 
-import com.songoda.ultimatetimber.UltimateTimber;
+import com.songoda.ultimatetimber.api.UltimateTimberApi;
 import com.songoda.ultimatetimber.api.animation.TreeAnimationType;
 import com.songoda.ultimatetimber.api.manager.TreeDefinitionManager;
 import com.songoda.ultimatetimber.api.tree.DetectedTree;
 import com.songoda.ultimatetimber.api.tree.TreeBlock;
-import com.songoda.ultimatetimber.api.tree.TreeBlockType;
 import com.songoda.ultimatetimber.api.tree.TreeDefinition;
 import com.songoda.ultimatetimber.config.TimberConfig;
 import com.songoda.ultimatetimber.utils.ParticleUtils;
+import com.songoda.ultimatetimber.utils.RegionBatchProcessor;
 import com.songoda.ultimatetimber.utils.SoundUtils;
+import com.songoda.core.vortexcore.compatibility.folia.SchedulerRunnable;
+import com.songoda.core.vortexcore.compatibility.folia.SchedulerUtils;
 import org.bukkit.block.Block;
-import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.util.Vector;
+import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Animation where tree blocks disintegrate into particles and drops in place.
  */
 public class TreeAnimationDisintegrate extends TreeAnimationBase {
 
-    public TreeAnimationDisintegrate(@NotNull DetectedTree detectedTree, @NotNull Player player) {
-        super(TreeAnimationType.DISINTEGRATE, detectedTree, player);
+    public TreeAnimationDisintegrate(@NotNull DetectedTree detectedTree,
+                                     @NotNull Player player,
+                                     @Nullable TimberConfig config) {
+        super(TreeAnimationType.DISINTEGRATE, detectedTree, player, config);
     }
 
     @Override
     public void playAnimation(@NotNull Runnable whenFinished) {
-        UltimateTimber plugin = UltimateTimber.getInstance();
-        TreeDefinitionManager treeDefinitionManager = plugin.getTreeDefinitionManager();
-        TimberConfig config = plugin.getTimberConfig();
+        Plugin plugin = UltimateTimberApi.getPlugin();
+        TreeDefinitionManager treeDefinitionManager = UltimateTimberApi.getTreeDefinitionManager();
 
-        boolean useCustomSound = config == null || config.isUseCustomSounds();
-        boolean useCustomParticles = config == null || config.isUseCustomParticles();
+        boolean useCustomSounds = this.config == null || this.config.isUseCustomSounds();
+        boolean useCustomParticles = this.config == null || this.config.isUseCustomParticles();
 
-        List<TreeBlock<Block>> orderedLogBlocks = new ArrayList<>(this.detectedTree.getDetectedTreeBlocks().getLogBlocks());
-        orderedLogBlocks.sort(Comparator.comparingInt(x -> x.getLocation().getBlockY()));
+        List<TreeBlock<Block>> orderedLogBlocks = new ArrayList<>(this.detectedTree.detectedTreeBlocks().getLogBlocks());
+        orderedLogBlocks.sort(Comparator.comparingInt(treeBlock -> treeBlock.getLocation().getBlockY()));
 
-        List<TreeBlock<Block>> leafBlocks = new ArrayList<>(this.detectedTree.getDetectedTreeBlocks().getLeafBlocks());
-        Collections.shuffle(leafBlocks);
+        List<TreeBlock<Block>> shuffledLeafBlocks = new ArrayList<>(this.detectedTree.detectedTreeBlocks().getLeafBlocks());
+        Collections.shuffle(shuffledLeafBlocks);
 
-        Player p = this.player;
-        TreeDefinition td = this.detectedTree.getTreeDefinition();
-        boolean hst = this.hasSilkTouch;
+        TreeDefinition treeDefinition = this.detectedTree.treeDefinition();
 
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                List<TreeBlock<Block>> toDestroy = new ArrayList<>();
+        SchedulerUtils.runTaskTimer(plugin, new DisintegrateAnimationTask(
+                orderedLogBlocks,
+                shuffledLeafBlocks,
+                treeDefinition,
+                treeDefinitionManager,
+                useCustomSounds,
+                useCustomParticles,
+                whenFinished
+        ), 0L, 1L);
+    }
 
-                if (!orderedLogBlocks.isEmpty()) {
-                    TreeBlock<Block> treeBlock = orderedLogBlocks.remove(0);
-                    toDestroy.add(treeBlock);
-                } else if (!leafBlocks.isEmpty()) {
-                    TreeBlock<Block> treeBlock = leafBlocks.remove(0);
-                    toDestroy.add(treeBlock);
+    private final class DisintegrateAnimationTask extends SchedulerRunnable {
 
-                    if (!leafBlocks.isEmpty()) {
-                        treeBlock = leafBlocks.remove(0);
-                        toDestroy.add(treeBlock);
-                    }
-                }
+        private final List<TreeBlock<Block>> orderedLogBlocks;
+        private final List<TreeBlock<Block>> shuffledLeafBlocks;
+        private final TreeDefinition treeDefinition;
+        @Nullable
+        private final TreeDefinitionManager treeDefinitionManager;
+        private final boolean useCustomSounds;
+        private final boolean useCustomParticles;
+        private final Runnable whenFinished;
+        private final AtomicBoolean batchInProgress = new AtomicBoolean();
+        private int nextLogIndex;
+        private int nextLeafIndex;
 
-                for (TreeBlock<FallingBlock> fallingTreeBlock : TreeAnimationDisintegrate.this.fallingTreeBlocks.getAllTreeBlocks()) {
-                    FallingBlock fallingBlock = fallingTreeBlock.getBlock();
-                    fallingBlock.setVelocity(fallingBlock.getVelocity().clone().subtract(new Vector(0, 0.05, 0)));
-                }
+        private DisintegrateAnimationTask(List<TreeBlock<Block>> orderedLogBlocks,
+                                          List<TreeBlock<Block>> shuffledLeafBlocks,
+                                          TreeDefinition treeDefinition,
+                                          @Nullable TreeDefinitionManager treeDefinitionManager,
+                                          boolean useCustomSounds,
+                                          boolean useCustomParticles,
+                                          Runnable whenFinished) {
+            this.orderedLogBlocks = orderedLogBlocks;
+            this.shuffledLeafBlocks = shuffledLeafBlocks;
+            this.treeDefinition = treeDefinition;
+            this.treeDefinitionManager = treeDefinitionManager;
+            this.useCustomSounds = useCustomSounds;
+            this.useCustomParticles = useCustomParticles;
+            this.whenFinished = whenFinished;
+        }
 
-                if (!toDestroy.isEmpty()) {
-                    TreeBlock<Block> first = toDestroy.get(0);
-                    if (useCustomSound) {
-                        SoundUtils.playLandingSound(first);
-                    }
-
-                    for (TreeBlock<Block> treeBlock : toDestroy) {
-                        if (treeBlock.getTreeBlockType() == TreeBlockType.LOG) {
-                            if (!td.getLogMaterials().contains(treeBlock.getBlock().getType())) {
-                                continue;
-                            }
-                        } else if (treeBlock.getTreeBlockType() == TreeBlockType.LEAF) {
-                            if (!td.getLeafMaterials().contains(treeBlock.getBlock().getType())) {
-                                continue;
-                            }
-                        }
-
-                        if (useCustomParticles) {
-                            ParticleUtils.playFallingParticles(treeBlock);
-                        }
-                        if (treeDefinitionManager != null) {
-                            treeDefinitionManager.dropTreeLoot(td, treeBlock, p, hst, false);
-                        }
-                        TreeAnimationDisintegrate.this.replaceBlock(treeBlock);
-                    }
-                } else {
-                    this.cancel();
-                    whenFinished.run();
-                }
+        @Override
+        public void run() {
+            if (this.batchInProgress.get()) {
+                return;
             }
-        }.runTaskTimer(plugin, 0L, 1L);
+
+            if (this.nextLogIndex < this.orderedLogBlocks.size()) {
+                TreeBlock<Block> logBlock = this.orderedLogBlocks.get(this.nextLogIndex++);
+                this.processBatch(List.of(logBlock), block -> TreeAnimationDisintegrate.this.disintegrateBlock(
+                        block,
+                        this.treeDefinition,
+                        this.treeDefinitionManager,
+                        this.useCustomSounds,
+                        this.useCustomParticles
+                ));
+                return;
+            }
+
+            if (this.nextLeafIndex < this.shuffledLeafBlocks.size()) {
+                List<TreeBlock<Block>> leafBatch = new ArrayList<>(2);
+                leafBatch.add(this.shuffledLeafBlocks.get(this.nextLeafIndex++));
+                if (this.nextLeafIndex < this.shuffledLeafBlocks.size()) {
+                    leafBatch.add(this.shuffledLeafBlocks.get(this.nextLeafIndex++));
+                }
+
+                AtomicBoolean firstLeafWasDisintegrated = new AtomicBoolean();
+                AtomicInteger leafIndex = new AtomicInteger();
+                this.processBatch(leafBatch, leafBlock -> {
+                    int index = leafIndex.getAndIncrement();
+                    boolean wasDisintegrated = TreeAnimationDisintegrate.this.disintegrateBlock(
+                            leafBlock,
+                            this.treeDefinition,
+                            this.treeDefinitionManager,
+                            this.useCustomSounds && (index == 0 || !firstLeafWasDisintegrated.get()),
+                            this.useCustomParticles
+                    );
+                    if (index == 0) {
+                        firstLeafWasDisintegrated.set(wasDisintegrated);
+                    }
+                });
+                return;
+            }
+
+            this.cancel();
+            this.whenFinished.run();
+        }
+
+        private void processBatch(@NotNull List<TreeBlock<Block>> treeBlocks,
+                                  @NotNull Consumer<TreeBlock<Block>> action) {
+            this.batchInProgress.set(true);
+            RegionBatchProcessor.processByRegion(
+                    UltimateTimberApi.getPlugin(),
+                    treeBlocks,
+                    TreeBlock::getLocation,
+                    action,
+                    () -> this.batchInProgress.set(false)
+            );
+        }
+    }
+
+    private boolean disintegrateBlock(@NotNull TreeBlock<Block> treeBlock,
+                                      @NotNull TreeDefinition treeDefinition,
+                                      @Nullable TreeDefinitionManager treeDefinitionManager,
+                                      boolean useCustomSound,
+                                      boolean useCustomParticles) {
+        if (!isExpectedTreeBlock(treeBlock, treeDefinition)) {
+            return false;
+        }
+
+        if (useCustomSound) {
+            SoundUtils.playLandingSound(treeBlock);
+        }
+        if (useCustomParticles) {
+            ParticleUtils.playFallingParticles(treeBlock);
+        }
+        if (treeDefinitionManager != null) {
+            treeDefinitionManager.dropTreeLoot(treeDefinition, treeBlock, this.player, this.hasSilkTouch, false);
+        }
+        this.replaceBlock(treeBlock);
+        return true;
+    }
+
+    private boolean isExpectedTreeBlock(@NotNull TreeBlock<Block> treeBlock, @NotNull TreeDefinition treeDefinition) {
+        return switch (treeBlock.treeBlockType()) {
+            case LOG -> treeDefinition.getLogMaterials().contains(treeBlock.block().getType());
+            case LEAF -> treeDefinition.getLeafMaterials().contains(treeBlock.block().getType());
+        };
     }
 }

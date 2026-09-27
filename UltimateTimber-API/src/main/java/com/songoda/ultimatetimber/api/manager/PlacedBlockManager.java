@@ -19,7 +19,7 @@ public interface PlacedBlockManager {
     /**
      * Updates the placed state of a block.
      *
-     * @param block The block to update
+     * @param block    The block to update
      * @param isPlaced True to mark as placed, false to remove
      */
     void protectBlock(@NotNull Block block, boolean isPlaced);

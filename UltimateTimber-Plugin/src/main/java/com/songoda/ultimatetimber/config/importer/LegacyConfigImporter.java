@@ -1,15 +1,23 @@
 package com.songoda.ultimatetimber.config.importer;
 
+import com.songoda.core.SongodaPlugin;
+import net.vortexdevelopment.vinject.config.yaml.YamlConfig;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.Charset;
+import java.nio.charset.CodingErrorAction;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.Arrays;
+import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -18,12 +26,74 @@ import java.util.logging.Logger;
  */
 public final class LegacyConfigImporter {
 
-    private final File dataFolder;
-    private final Logger logger;
+    /**
+     * Legacy Songoda configuration files were commonly saved as Windows-1252.
+     * Reading those bytes as UTF-8 replaces every non-ASCII character with a
+     * replacement character, which permanently corrupts localized text during
+     * migration, so such files are re-decoded instead.
+     */
+    private static final Charset LEGACY_CHARSET = Charset.forName("windows-1252");
 
-    public LegacyConfigImporter(File dataFolder, Logger logger) {
+    private final File dataFolder;
+    private final Logger logger = resolveLogger();
+
+    public LegacyConfigImporter(File dataFolder) {
         this.dataFolder = dataFolder;
-        this.logger = logger;
+    }
+
+    /**
+     * Inspects the configuration file, strips any UTF-8 Byte Order Mark (BOM),
+     * and ensures the file is valid UTF-8. If non-UTF-8 bytes (e.g. Windows-1252)
+     * are detected, it re-encodes the file cleanly to prevent MalformedInputException.
+     *
+     * @param configFile The configuration file to sanitize
+     */
+    public static void sanitizeEncoding(File configFile) {
+        Logger logger = resolveLogger();
+        if (configFile == null || !configFile.isFile()) {
+            return;
+        }
+
+        try {
+            byte[] bytes = Files.readAllBytes(configFile.toPath());
+            if (bytes.length == 0) {
+                return;
+            }
+
+            boolean hasBom = bytes.length >= 3
+                    && (bytes[0] & 0xFF) == 0xEF
+                    && (bytes[1] & 0xFF) == 0xBB
+                    && (bytes[2] & 0xFF) == 0xBF;
+
+            byte[] cleanBytes = hasBom
+                    ? Arrays.copyOfRange(bytes, 3, bytes.length)
+                    : bytes;
+
+            java.nio.charset.CharsetDecoder decoder = StandardCharsets.UTF_8.newDecoder()
+                    .onMalformedInput(CodingErrorAction.REPORT)
+                    .onUnmappableCharacter(CodingErrorAction.REPORT);
+
+            try {
+                decoder.decode(ByteBuffer.wrap(cleanBytes));
+            } catch (CharacterCodingException e) {
+                String decoded = new String(cleanBytes, LEGACY_CHARSET);
+                Files.writeString(configFile.toPath(), decoded, StandardCharsets.UTF_8);
+                logger.info("[UltimateTimber] Converted config.yml from legacy encoding to clean UTF-8.");
+                return;
+            }
+
+            if (hasBom) {
+                Files.write(configFile.toPath(), cleanBytes);
+                logger.info("[UltimateTimber] Stripped UTF-8 BOM from config.yml.");
+            }
+        } catch (IOException e) {
+            logger.log(Level.WARNING, "[UltimateTimber] Could not verify/sanitize configuration file encoding.", e);
+        }
+    }
+
+    private static Logger resolveLogger() {
+        SongodaPlugin plugin = SongodaPlugin.getInstance();
+        return plugin == null ? Logger.getLogger(LegacyConfigImporter.class.getName()) : plugin.getLogger();
     }
 
     /**
@@ -37,7 +107,14 @@ public final class LegacyConfigImporter {
             return false;
         }
 
-        YamlConfiguration config = YamlConfiguration.loadConfiguration(configFile);
+        YamlConfiguration config;
+        try {
+            config = readConfiguration(configFile);
+        } catch (IOException | InvalidConfigurationException e) {
+            this.logger.log(Level.WARNING, "[UltimateTimber] Unable to read the existing configuration file.", e);
+            return false;
+        }
+
         return config.contains("server-type")
                 || config.contains("max-logs-per-chop")
                 || config.contains("leaves-required-for-tree")
@@ -58,20 +135,35 @@ public final class LegacyConfigImporter {
 
         this.logger.info("[UltimateTimber] Detected legacy configuration format. Starting migration...");
 
-        File backupFile = new File(this.dataFolder, "config-legacy.yml");
+        File backupFile = resolveBackupFile();
         try {
-            Files.copy(configFile.toPath(), backupFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(configFile.toPath(), backupFile.toPath());
             this.logger.info("[UltimateTimber] Backed up legacy configuration to " + backupFile.getName());
         } catch (IOException e) {
             this.logger.log(Level.SEVERE, "[UltimateTimber] Failed to back up legacy configuration file!", e);
             return false;
         }
 
-        YamlConfiguration legacy = YamlConfiguration.loadConfiguration(backupFile);
-        YamlConfiguration modern = new YamlConfiguration();
+        YamlConfiguration legacy;
+        try {
+            legacy = readConfiguration(backupFile);
+        } catch (IOException | InvalidConfigurationException e) {
+            this.logger.log(Level.SEVERE, "[UltimateTimber] Failed to read the backed up legacy configuration file!", e);
+            return false;
+        }
+
+        YamlConfiguration modern;
+        try (java.io.InputStream resourceStream = getClass().getClassLoader().getResourceAsStream("config.yml")) {
+            if (resourceStream != null) {
+                modern = YamlConfiguration.loadConfiguration(new java.io.InputStreamReader(resourceStream, StandardCharsets.UTF_8));
+            } else {
+                modern = new YamlConfiguration();
+            }
+        } catch (Exception e) {
+            modern = new YamlConfiguration();
+        }
 
         // Top level settings
-        modern.set("Locale", legacy.getString("locale", "en_US"));
         modern.set("Disabled Worlds", legacy.getStringList("disabled-worlds"));
         modern.set("Max Logs Per Chop", legacy.getInt("max-logs-per-chop", 150));
         modern.set("Leaves Required For Tree", legacy.getInt("leaves-required-for-tree", 5));
@@ -126,11 +218,16 @@ public final class LegacyConfigImporter {
 
         // Required axe
         if (legacy.contains("required-axe")) {
-            modern.set("Required Axe.Type", legacy.getString("required-axe.type", "DIAMOND_AXE"));
+            modern.set("Required Axe.Material", legacy.getString("required-axe.material", legacy.getString("required-axe.type", "DIAMOND_AXE")));
             modern.set("Required Axe.Name", legacy.getString("required-axe.name", "<green>An Epic Axe"));
             modern.set("Required Axe.Lore", legacy.getStringList("required-axe.lore"));
             modern.set("Required Axe.Enchants", legacy.getStringList("required-axe.enchants"));
-            modern.set("Required Axe.Nbt", legacy.getString("required-axe.nbt", "ultimatetimber_axe"));
+            String legacyNbt = legacy.getString("required-axe.nbt", "ultimatetimber_axe");
+            String sanitized = sanitizeLegacyAxeKey(legacyNbt);
+            if (sanitized.isEmpty()) {
+                sanitized = "axe";
+            }
+            modern.set("Required Axe.PDC", java.util.List.of("ultimatetimber:" + sanitized + ":BYTE:1"));
         }
 
         // Trees
@@ -161,14 +258,104 @@ public final class LegacyConfigImporter {
             }
         }
 
+        String migrated = renderModern(modern);
         try {
-            modern.save(configFile);
+            YamlConfig.load(migrated);
+        } catch (RuntimeException e) {
+            this.logger.log(Level.SEVERE, "[UltimateTimber] Migrated configuration failed validation and was not written. "
+                    + "The legacy configuration file was left untouched.", e);
+            return false;
+        }
+
+        return writeAtomically(configFile, migrated);
+    }
+
+    /**
+     * Renders the modern configuration in a shape the VInject YAML reader accepts.
+     * Its reader is line based, so a value must never be folded onto a
+     * continuation line, which is what the default 80 character dump width does
+     * to long values such as loot commands.
+     *
+     * @param modern The modern configuration to render
+     * @return The rendered YAML document
+     */
+    private String renderModern(YamlConfiguration modern) {
+        modern.options().width(Integer.MAX_VALUE);
+        return modern.saveToString();
+    }
+
+    /**
+     * Writes the migrated document through a temporary file so a failed write can
+     * never leave a half written configuration in place.
+     *
+     * @param configFile The live configuration file to replace
+     * @param migrated   The validated YAML document
+     * @return True if the file was replaced
+     */
+    private boolean writeAtomically(File configFile, String migrated) {
+        Path target = configFile.toPath();
+        Path temporary = new File(this.dataFolder, configFile.getName() + ".migrating").toPath();
+
+        try {
+            Files.writeString(temporary, migrated, StandardCharsets.UTF_8);
+            try {
+                Files.move(temporary, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            } catch (IOException atomicMoveFailure) {
+                Files.move(temporary, target, StandardCopyOption.REPLACE_EXISTING);
+            }
             this.logger.info("[UltimateTimber] Successfully migrated legacy configuration to modern YAML structure.");
             return true;
         } catch (IOException e) {
             this.logger.log(Level.SEVERE, "[UltimateTimber] Failed to save modern configuration file after migration!", e);
+            try {
+                Files.deleteIfExists(temporary);
+            } catch (IOException ignored) {
+                // The temporary file is left behind for inspection only.
+            }
             return false;
         }
+    }
+
+    /**
+     * Reads a configuration file, falling back to the legacy encoding when the
+     * contents are not valid UTF-8.
+     *
+     * @param file The configuration file to read
+     * @return The loaded configuration
+     * @throws IOException                   If the file cannot be read
+     * @throws InvalidConfigurationException If the contents are not valid YAML
+     */
+    private YamlConfiguration readConfiguration(File file) throws IOException, InvalidConfigurationException {
+        byte[] bytes = Files.readAllBytes(file.toPath());
+        YamlConfiguration configuration = new YamlConfiguration();
+        configuration.loadFromString(decode(bytes));
+        return configuration;
+    }
+
+    private String decode(byte[] bytes) {
+        try {
+            return StandardCharsets.UTF_8.newDecoder()
+                    .onMalformedInput(CodingErrorAction.REPORT)
+                    .onUnmappableCharacter(CodingErrorAction.REPORT)
+                    .decode(ByteBuffer.wrap(bytes))
+                    .toString();
+        } catch (CharacterCodingException e) {
+            return new String(bytes, LEGACY_CHARSET);
+        }
+    }
+
+    /**
+     * Resolves a backup file name that never overwrites an existing backup, so an
+     * earlier migration can always be recovered.
+     *
+     * @return The backup file to create
+     */
+    private File resolveBackupFile() {
+        File backupFile = new File(this.dataFolder, "config-legacy.yml");
+        for (int index = 2; backupFile.exists(); index++) {
+            backupFile = new File(this.dataFolder, "config-legacy-" + index + ".yml");
+        }
+        return backupFile;
     }
 
     private void migrateLootSection(ConfigurationSection section, YamlConfiguration modern, String targetPath) {
@@ -187,9 +374,24 @@ public final class LegacyConfigImporter {
                 modern.set(itemPrefix + "Material", lootItem.getString("material"));
             }
             if (lootItem.contains("command")) {
-                modern.set(itemPrefix + "Command", lootItem.getString("command"));
+                String command = lootItem.getString("command");
+                if (command != null) {
+                    modern.set(itemPrefix + "Command", migrateCommandPlaceholders(command));
+                }
             }
             modern.set(itemPrefix + "Chance", lootItem.getDouble("chance", 0.0));
         }
+    }
+
+    private String migrateCommandPlaceholders(String command) {
+        return command.replace("%player%", "<player>")
+                .replace("%type%", "<type>")
+                .replace("%xPos%", "<x-pos>")
+                .replace("%yPos%", "<y-pos>")
+                .replace("%zPos%", "<z-pos>");
+    }
+
+    private String sanitizeLegacyAxeKey(String key) {
+        return key.trim().toLowerCase(Locale.ROOT).replace(' ', '_').replaceAll("[^a-z0-9._/-]", "");
     }
 }

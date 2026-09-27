@@ -15,12 +15,12 @@ public class TreeFellEvent extends TreeEvent {
         super(who, detectedTree);
     }
 
-    @Override
-    public @NotNull HandlerList getHandlers() {
+    public static @NotNull HandlerList getHandlerList() {
         return HANDLERS;
     }
 
-    public static @NotNull HandlerList getHandlerList() {
+    @Override
+    public @NotNull HandlerList getHandlers() {
         return HANDLERS;
     }
 }

@@ -1,6 +1,8 @@
 package com.songoda.ultimatetimber.manager;
 
 import com.songoda.core.vortexcore.hooks.internal.ReloadHook;
+import com.songoda.core.vortexcore.compatibility.folia.SchedulerTask;
+import com.songoda.core.vortexcore.compatibility.folia.SchedulerUtils;
 import com.songoda.core.vortexcore.vinject.annotation.RegisterReloadHook;
 import com.songoda.ultimatetimber.UltimateTimber;
 import com.songoda.ultimatetimber.api.manager.BlockReplacementManager;
@@ -8,18 +10,23 @@ import com.songoda.ultimatetimber.api.manager.SaplingManager;
 import com.songoda.ultimatetimber.api.tree.TreeBlock;
 import com.songoda.ultimatetimber.api.tree.TreeDefinition;
 import com.songoda.ultimatetimber.config.TimberConfig;
+import com.songoda.ultimatetimber.utils.RegionBatchProcessor;
 import net.vortexdevelopment.vinject.annotation.Inject;
 import net.vortexdevelopment.vinject.annotation.component.Component;
 import net.vortexdevelopment.vinject.annotation.lifecycle.OnDestroy;
 import net.vortexdevelopment.vinject.annotation.lifecycle.PostConstruct;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Service managing queued or instant tree block replacement and sapling replanting.
@@ -28,29 +35,30 @@ import java.util.Deque;
 @RegisterReloadHook
 public class BlockReplacementManagerImpl implements BlockReplacementManager, ReloadHook, Runnable {
 
+    private final Queue<QueuedBlockReplacement> queue = new ConcurrentLinkedQueue<>();
+    private final AtomicBoolean batchInProgress = new AtomicBoolean();
     @Inject
     private TimberConfig config;
-
     @Inject
     private SaplingManager saplingManager;
-
-    private final Deque<QueuedBlockReplacement> queue = new ArrayDeque<>();
-    private String mode = "NEVER";
-    private int playerThreshold = 20;
-    private int maxPerTick = 1000;
-    private BukkitTask task;
+    @Inject
+    private UltimateTimber plugin;
+    private volatile ReplacementMode mode = ReplacementMode.NEVER;
+    private volatile int playerThreshold = 20;
+    private volatile int maxPerTick = 1000;
+    private volatile int onlinePlayerCount;
+    private SchedulerTask task;
 
     @PostConstruct
     public void initialize() {
         onReload();
-        UltimateTimber plugin = UltimateTimber.getInstance();
-        this.task = Bukkit.getScheduler().runTaskTimer(plugin, this, 0L, 1L);
+        this.task = SchedulerUtils.runTaskTimer(plugin, this, 0L, 1L);
     }
 
     @OnDestroy
     public void onDestroy() {
         if (this.task != null) {
-            this.task.cancel();
+            SchedulerUtils.cancelTask(this.task);
             this.task = null;
         }
         processAll();
@@ -58,11 +66,9 @@ public class BlockReplacementManagerImpl implements BlockReplacementManager, Rel
 
     @Override
     public void onReload() {
-        if (this.config != null && this.config.getQueuedBlockReplacement() != null) {
-            this.mode = this.config.getQueuedBlockReplacement().getMode();
-            this.playerThreshold = this.config.getQueuedBlockReplacement().getThreshold();
-            this.maxPerTick = this.config.getQueuedBlockReplacement().getMaxPerTick();
-        }
+        this.mode = ReplacementMode.from(this.config.getQueuedBlockReplacement().getMode());
+        this.playerThreshold = this.config.getQueuedBlockReplacement().getThreshold();
+        this.maxPerTick = this.config.getQueuedBlockReplacement().getMaxPerTick();
     }
 
     @Override
@@ -76,40 +82,89 @@ public class BlockReplacementManagerImpl implements BlockReplacementManager, Rel
 
     @Override
     public void processAll() {
-        while (!this.queue.isEmpty()) {
-            executeReplacement(this.queue.poll());
+        if (!this.batchInProgress.compareAndSet(false, true)) {
+            return;
         }
+
+        List<QueuedBlockReplacement> replacements = new ArrayList<>();
+        QueuedBlockReplacement replacement;
+        while ((replacement = this.queue.poll()) != null) {
+            replacements.add(replacement);
+        }
+
+        this.processReplacements(replacements);
     }
 
     @Override
     public void run() {
-        if (this.queue.isEmpty()) {
+        this.onlinePlayerCount = Bukkit.getOnlinePlayers().size();
+        if (!this.batchInProgress.compareAndSet(false, true)) {
             return;
         }
 
-        int processed = 0;
-        while (!this.queue.isEmpty() && processed < this.maxPerTick) {
-            QueuedBlockReplacement entry = this.queue.poll();
-            if (entry != null) {
-                executeReplacement(entry);
-                processed++;
+        List<QueuedBlockReplacement> replacements = new ArrayList<>(Math.max(0, this.maxPerTick));
+        for (int processed = 0; processed < this.maxPerTick; processed++) {
+            QueuedBlockReplacement replacement = this.queue.poll();
+            if (replacement == null) {
+                break;
             }
+            replacements.add(replacement);
         }
+
+        this.processReplacements(replacements);
+    }
+
+    private void processReplacements(@NotNull List<QueuedBlockReplacement> replacements) {
+        if (replacements.isEmpty()) {
+            this.batchInProgress.set(false);
+            return;
+        }
+
+        RegionBatchProcessor.processByRegion(
+                plugin,
+                replacements,
+                replacement -> replacement.treeBlock().getLocation(),
+                this::executeReplacement,
+                () -> this.batchInProgress.set(false)
+        );
     }
 
     private boolean isQueuingActive() {
-        if ("ALWAYS".equalsIgnoreCase(this.mode)) {
-            return true;
-        } else if ("DYNAMIC".equalsIgnoreCase(this.mode)) {
-            return Bukkit.getOnlinePlayers().size() >= this.playerThreshold;
-        }
-        return false;
+        return switch (this.mode) {
+            case NEVER -> false;
+            case ALWAYS -> true;
+            case DYNAMIC -> this.onlinePlayerCount >= this.playerThreshold;
+        };
     }
 
     private void executeReplacement(QueuedBlockReplacement entry) {
-        entry.treeBlock.getBlock().setType(Material.AIR);
+        Location location = entry.treeBlock().getLocation();
+        if (!SchedulerUtils.isOwnedByCurrentRegion(location)) {
+            SchedulerUtils.runLocationTask(plugin, location, () -> this.executeReplacement(entry));
+            return;
+        }
+
+        entry.treeBlock.block().setType(Material.AIR);
         if (this.saplingManager != null) {
             this.saplingManager.replantSapling(entry.treeDefinition, entry.treeBlock);
+        }
+    }
+
+    private enum ReplacementMode {
+        NEVER,
+        ALWAYS,
+        DYNAMIC;
+
+        private static ReplacementMode from(String value) {
+            if (value == null) {
+                return NEVER;
+            }
+
+            try {
+                return valueOf(value.toUpperCase(Locale.ROOT));
+            } catch (IllegalArgumentException ignored) {
+                return NEVER;
+            }
         }
     }
 

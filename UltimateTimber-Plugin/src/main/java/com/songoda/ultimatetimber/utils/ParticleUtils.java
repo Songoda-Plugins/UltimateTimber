@@ -26,7 +26,7 @@ public final class ParticleUtils {
             return;
         }
 
-        Location location = treeBlock.getLocation().clone().add(0.5, 0.5, 0.5);
+        Location location = particleLocation(treeBlock);
         if (location.getWorld() != null) {
             location.getWorld().spawnParticle(Particle.BLOCK, location, 10, 0.2, 0.2, 0.2, blockData);
         }
@@ -43,16 +43,25 @@ public final class ParticleUtils {
             return;
         }
 
-        Location location = treeBlock.getLocation().clone().add(0.5, 0.5, 0.5);
+        Location location = particleLocation(treeBlock);
         if (location.getWorld() != null) {
             location.getWorld().spawnParticle(Particle.BLOCK, location, 15, 0.3, 0.1, 0.3, blockData);
         }
     }
 
+    private static Location particleLocation(TreeBlock<?> treeBlock) {
+        Location location = treeBlock.getLocation().clone();
+        if (treeBlock.block() instanceof FallingBlock) {
+            return location.add(0.0, 0.5, 0.0);
+        }
+
+        return location.add(0.5, 0.5, 0.5);
+    }
+
     private static BlockData extractBlockData(TreeBlock<?> treeBlock) {
-        if (treeBlock.getBlock() instanceof Block block) {
+        if (treeBlock.block() instanceof Block block) {
             return block.getBlockData();
-        } else if (treeBlock.getBlock() instanceof FallingBlock fallingBlock) {
+        } else if (treeBlock.block() instanceof FallingBlock fallingBlock) {
             return fallingBlock.getBlockData();
         }
         return null;

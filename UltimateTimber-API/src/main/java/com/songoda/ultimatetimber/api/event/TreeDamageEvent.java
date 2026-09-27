@@ -24,7 +24,7 @@ public class TreeDamageEvent extends PlayerEvent implements Cancellable {
      * Constructs a TreeDamageEvent caused by a falling block.
      *
      * @param attacker The falling block causing damage
-     * @param victim The player receiving damage
+     * @param victim   The player receiving damage
      */
     public TreeDamageEvent(@NotNull FallingBlock attacker, @NotNull Player victim) {
         super(victim);
@@ -35,11 +35,15 @@ public class TreeDamageEvent extends PlayerEvent implements Cancellable {
      * Constructs a TreeDamageEvent caused by an attacking player.
      *
      * @param attacker The player causing damage
-     * @param victim The player receiving damage
+     * @param victim   The player receiving damage
      */
     public TreeDamageEvent(@NotNull Player attacker, @NotNull Player victim) {
         super(victim);
         this.playerAttacker = attacker;
+    }
+
+    public static @NotNull HandlerList getHandlerList() {
+        return handlers;
     }
 
     /**
@@ -69,10 +73,6 @@ public class TreeDamageEvent extends PlayerEvent implements Cancellable {
 
     @Override
     public @NotNull HandlerList getHandlers() {
-        return handlers;
-    }
-
-    public static @NotNull HandlerList getHandlerList() {
         return handlers;
     }
 

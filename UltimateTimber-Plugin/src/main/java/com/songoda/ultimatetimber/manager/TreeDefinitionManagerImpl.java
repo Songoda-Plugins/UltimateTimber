@@ -1,9 +1,10 @@
 package com.songoda.ultimatetimber.manager;
 
 import com.songoda.core.vortexcore.hooks.internal.ReloadHook;
-import com.songoda.core.vortexcore.text.AdventureUtils;
+import com.songoda.core.vortexcore.text.MiniMessagePlaceholder;
+import com.songoda.core.vortexcore.compatibility.folia.SchedulerUtils;
 import com.songoda.core.vortexcore.vinject.annotation.RegisterReloadHook;
-import com.songoda.ultimatetimber.UltimateTimber;
+import com.songoda.ultimatetimber.api.UltimateTimberApi;
 import com.songoda.ultimatetimber.api.manager.TreeDefinitionManager;
 import com.songoda.ultimatetimber.api.tree.TreeBlock;
 import com.songoda.ultimatetimber.api.tree.TreeBlockType;
@@ -12,7 +13,6 @@ import com.songoda.ultimatetimber.api.tree.TreeLoot;
 import com.songoda.ultimatetimber.config.TimberConfig;
 import com.songoda.ultimatetimber.config.entry.GlobalLootConfig;
 import com.songoda.ultimatetimber.config.entry.LootConfigEntry;
-import com.songoda.ultimatetimber.config.entry.RequiredAxeConfig;
 import com.songoda.ultimatetimber.config.entry.TreeConfigEntry;
 import com.songoda.ultimatetimber.tree.TreeDefinitionImpl;
 import com.songoda.ultimatetimber.utils.BlockUtils;
@@ -22,19 +22,14 @@ import net.vortexdevelopment.vinject.annotation.lifecycle.PostConstruct;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
-import org.bukkit.Registry;
 import org.bukkit.block.Block;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -49,9 +44,6 @@ import java.util.Set;
 @RegisterReloadHook
 public class TreeDefinitionManagerImpl implements TreeDefinitionManager, ReloadHook {
 
-    @Inject
-    private TimberConfig config;
-
     private final Random random = new Random();
     private final Map<String, TreeDefinition> treeDefinitions = new LinkedHashMap<>();
     private final Set<Material> globalPlantableSoil = new HashSet<>();
@@ -59,10 +51,10 @@ public class TreeDefinitionManagerImpl implements TreeDefinitionManager, ReloadH
     private final Set<TreeLoot> globalLeafLoot = new HashSet<>();
     private final Set<TreeLoot> globalEntireTreeLoot = new HashSet<>();
     private final Set<Material> globalRequiredTools = new HashSet<>();
-
+    @Inject
+    private TimberConfig config;
     private boolean globalAxeRequired = false;
     private ItemStack requiredAxe;
-    private NamespacedKey requiredAxePdcKey;
 
     @PostConstruct
     public void initialize() {
@@ -70,7 +62,7 @@ public class TreeDefinitionManagerImpl implements TreeDefinitionManager, ReloadH
     }
 
     @Override
-    public void onReload() {
+    public synchronized void onReload() {
         this.treeDefinitions.clear();
         this.globalPlantableSoil.clear();
         this.globalLogLoot.clear();
@@ -151,96 +143,34 @@ public class TreeDefinitionManagerImpl implements TreeDefinitionManager, ReloadH
         }
     }
 
-    private void loadRequiredAxe(RequiredAxeConfig axeConfig) {
-        if (axeConfig == null) {
-            return;
-        }
-
-        String nbtKey = axeConfig.getNbt() != null && !axeConfig.getNbt().trim().isEmpty()
-                ? axeConfig.getNbt().trim().toLowerCase()
-                : "ultimatetimber_axe";
-
-        UltimateTimber plugin = UltimateTimber.getInstance();
-        this.requiredAxePdcKey = new NamespacedKey(plugin, nbtKey);
-
-        Material material = axeConfig.getResolvedMaterial();
-        if (material == null || material.isAir()) {
-            return;
-        }
-
-        ItemStack item = new ItemStack(material);
-        ItemMeta meta = item.getItemMeta();
-        if (meta != null) {
-            if (axeConfig.getName() != null && !axeConfig.getName().isEmpty()) {
-                meta.displayName(AdventureUtils.formatComponent(axeConfig.getName()));
-            }
-
-            if (axeConfig.getLore() != null && !axeConfig.getLore().isEmpty()) {
-                meta.lore(axeConfig.getLore().stream().map(AdventureUtils::formatComponent).toList());
-            }
-
-            if (axeConfig.getEnchants() != null) {
-                for (String enchantEntry : axeConfig.getEnchants()) {
-                    String[] parts = enchantEntry.split(":");
-                    String enchantName = parts[0].trim().toLowerCase();
-                    int level = parts.length > 1 ? parseInt(parts[1], 1) : 1;
-
-                    Enchantment enchant = resolveEnchantment(enchantName);
-                    if (enchant != null) {
-                        meta.addEnchant(enchant, Math.max(1, level), true);
-                    }
-                }
-            }
-
-            meta.getPersistentDataContainer().set(this.requiredAxePdcKey, PersistentDataType.BYTE, (byte) 1);
-            item.setItemMeta(meta);
-        }
-
-        this.requiredAxe = item;
-    }
-
-    private Enchantment resolveEnchantment(String name) {
-        NamespacedKey key = NamespacedKey.minecraft(name);
-        Enchantment enchantment = Registry.ENCHANTMENT.get(key);
-        if (enchantment != null) {
-            return enchantment;
-        }
-
-        return Enchantment.getByName(name.toUpperCase());
-    }
-
-    private int parseInt(String str, int fallback) {
-        try {
-            return Integer.parseInt(str.trim());
-        } catch (NumberFormatException e) {
-            return fallback;
-        }
+    private void loadRequiredAxe(@Nullable ItemStack configuredAxe) {
+        this.requiredAxe = configuredAxe == null ? null : configuredAxe.clone();
     }
 
     @Override
-    public @NotNull Set<TreeDefinition> getTreeDefinitions() {
-        return Collections.unmodifiableSet(new HashSet<>(this.treeDefinitions.values()));
+    public synchronized @NotNull Set<TreeDefinition> getTreeDefinitions() {
+        return Set.copyOf(this.treeDefinitions.values());
     }
 
     @Override
-    public @Nullable TreeDefinition getTreeDefinition(@NotNull String key) {
+    public synchronized @Nullable TreeDefinition getTreeDefinition(@NotNull String key) {
         return this.treeDefinitions.get(key.toLowerCase());
     }
 
     @Override
-    public @NotNull Set<TreeDefinition> getTreeDefinitionsForLog(@NotNull Block block) {
+    public synchronized @NotNull Set<TreeDefinition> getTreeDefinitionsForLog(@NotNull Block block) {
         return narrowTreeDefinition(new HashSet<>(this.treeDefinitions.values()), block, TreeBlockType.LOG);
     }
 
     @Override
-    public @NotNull Set<TreeDefinition> narrowTreeDefinition(@NotNull Set<TreeDefinition> possibleTreeDefinitions,
+    public synchronized @NotNull Set<TreeDefinition> narrowTreeDefinition(@NotNull Set<TreeDefinition> possibleTreeDefinitions,
                                                              @NotNull Block block,
                                                              @NotNull TreeBlockType treeBlockType) {
         return narrowTreeDefinition(possibleTreeDefinitions, block.getType(), treeBlockType);
     }
 
     @Override
-    public @NotNull Set<TreeDefinition> narrowTreeDefinition(@NotNull Set<TreeDefinition> possibleTreeDefinitions,
+    public synchronized @NotNull Set<TreeDefinition> narrowTreeDefinition(@NotNull Set<TreeDefinition> possibleTreeDefinitions,
                                                              @Nullable Material material,
                                                              @NotNull TreeBlockType treeBlockType) {
         Set<TreeDefinition> matching = new HashSet<>();
@@ -259,7 +189,7 @@ public class TreeDefinitionManagerImpl implements TreeDefinitionManager, ReloadH
     }
 
     @Override
-    public boolean isToolValidForAnyTreeDefinition(@Nullable ItemStack tool) {
+    public synchronized boolean isToolValidForAnyTreeDefinition(@Nullable ItemStack tool) {
         if (this.config != null && this.config.isIgnoreRequiredTools()) {
             return true;
         }
@@ -284,7 +214,7 @@ public class TreeDefinitionManagerImpl implements TreeDefinitionManager, ReloadH
     }
 
     @Override
-    public boolean isToolValidForTreeDefinition(@NotNull TreeDefinition treeDefinition, @Nullable ItemStack tool) {
+    public synchronized boolean isToolValidForTreeDefinition(@NotNull TreeDefinition treeDefinition, @Nullable ItemStack tool) {
         if (this.config != null && this.config.isIgnoreRequiredTools()) {
             return true;
         }
@@ -306,122 +236,179 @@ public class TreeDefinitionManagerImpl implements TreeDefinitionManager, ReloadH
     }
 
     private boolean isValidAxe(@Nullable ItemStack tool) {
-        if (tool == null || tool.getType().isAir() || !tool.hasItemMeta()) {
-            return false;
-        }
-
-        ItemMeta meta = tool.getItemMeta();
-        if (meta == null) {
-            return false;
-        }
-
-        if (this.requiredAxePdcKey != null && meta.getPersistentDataContainer().has(this.requiredAxePdcKey, PersistentDataType.BYTE)) {
-            return true;
-        }
-
-        return this.requiredAxe != null && tool.isSimilar(this.requiredAxe);
+        return tool != null
+                && !tool.getType().isAir()
+                && this.requiredAxe != null
+                && tool.isSimilar(this.requiredAxe);
     }
 
     @Override
-    public void dropTreeLoot(@NotNull TreeDefinition treeDefinition,
+    public synchronized void dropTreeLoot(@NotNull TreeDefinition treeDefinition,
                              @NotNull TreeBlock<?> treeBlock,
                              @NotNull Player player,
                              boolean hasSilkTouch,
                              boolean isForEntireTree) {
-        boolean addToInventory = this.config != null && this.config.isAddItemsToInventory();
-        boolean hasBonusChance = player.hasPermission("ultimatetimber.bonusloot");
-        List<ItemStack> lootedItems = new ArrayList<>();
-        List<String> lootedCommands = new ArrayList<>();
+        Location blockLocation = treeBlock.getLocation().clone();
+        if (!SchedulerUtils.isOwnedByCurrentRegion(blockLocation)) {
+            SchedulerUtils.runLocationTask(UltimateTimberApi.getPlugin(), blockLocation,
+                    () -> this.dropTreeLoot(treeDefinition, treeBlock, player, hasSilkTouch, isForEntireTree));
+            return;
+        }
 
-        List<TreeLoot> toTry = new ArrayList<>();
-        if (isForEntireTree) {
-            toTry.addAll(treeDefinition.getEntireTreeLoot());
-            toTry.addAll(this.globalEntireTreeLoot);
-        } else {
-            if (this.config != null && this.config.isApplySilkTouch() && hasSilkTouch) {
-                lootedItems.addAll(BlockUtils.getBlockDrops(treeBlock));
-            } else {
-                if (treeBlock.getTreeBlockType() == TreeBlockType.LOG) {
-                    toTry.addAll(treeDefinition.getLogLoot());
-                    toTry.addAll(this.globalLogLoot);
-                    if (treeDefinition.shouldDropOriginalLog()) {
-                        lootedItems.addAll(BlockUtils.getBlockDrops(treeBlock));
-                    }
-                } else if (treeBlock.getTreeBlockType() == TreeBlockType.LEAF) {
-                    toTry.addAll(treeDefinition.getLeafLoot());
-                    toTry.addAll(this.globalLeafLoot);
-                    if (treeDefinition.shouldDropOriginalLeaf()) {
-                        lootedItems.addAll(BlockUtils.getBlockDrops(treeBlock));
-                    }
-                }
-            }
+        LootSelection lootSelection = selectLoot(treeDefinition, treeBlock, hasSilkTouch, isForEntireTree);
+        List<ItemStack> originalDrops = new ArrayList<>();
+        if (lootSelection.dropOriginalBlock()) {
+            originalDrops.addAll(BlockUtils.getBlockDrops(treeBlock));
         }
 
         double multiplier = (this.config != null) ? this.config.getBonusLootMultiplier() : 2.0;
-        for (TreeLoot treeLoot : toTry) {
+        SchedulerUtils.runEntityTask(UltimateTimberApi.getPlugin(), player, () -> this.completeLootDrop(
+                treeDefinition,
+                player,
+                blockLocation,
+                originalDrops,
+                lootSelection.configuredLoot(),
+                multiplier,
+                this.config != null && this.config.isAddItemsToInventory()
+        ));
+    }
+
+    private void completeLootDrop(@NotNull TreeDefinition treeDefinition,
+                                  @NotNull Player player,
+                                  @NotNull Location blockLocation,
+                                  @NotNull List<ItemStack> originalDrops,
+                                  @NotNull List<TreeLoot> configuredLoot,
+                                  double multiplier,
+                                  boolean addToInventory) {
+        boolean hasBonusChance = player.hasPermission("ultimatetimber.bonusloot");
+        List<ItemStack> lootedItems = new ArrayList<>(originalDrops);
+        List<String> lootedCommands = new ArrayList<>();
+
+        for (TreeLoot treeLoot : configuredLoot) {
             if (treeLoot == null) {
                 continue;
             }
 
-            double chance = hasBonusChance ? treeLoot.getChance() * multiplier : treeLoot.getChance();
+            double chance = hasBonusChance ? treeLoot.chance() * multiplier : treeLoot.chance();
             if (this.random.nextDouble() > chance / 100.0) {
                 continue;
             }
 
             if (treeLoot.hasItem()) {
-                lootedItems.add(treeLoot.getItem().clone());
+                lootedItems.add(treeLoot.item().clone());
             }
 
             if (treeLoot.hasCommand()) {
-                lootedCommands.add(treeLoot.getCommand());
+                lootedCommands.add(treeLoot.command());
             }
         }
 
-        Location blockLocation = treeBlock.getLocation();
         if (addToInventory && player.getWorld().equals(blockLocation.getWorld())) {
             List<ItemStack> extraItems = new ArrayList<>();
             for (ItemStack item : lootedItems) {
                 extraItems.addAll(player.getInventory().addItem(item).values());
             }
-            Location playerLoc = player.getLocation().clone().subtract(0.5, 0.0, 0.5);
-            for (ItemStack extra : extraItems) {
-                if (playerLoc.getWorld() != null) {
-                    playerLoc.getWorld().dropItemNaturally(playerLoc, extra);
+
+            Location playerLocation = player.getLocation().clone().subtract(0.5, 0.0, 0.5);
+            for (ItemStack extraItem : extraItems) {
+                if (playerLocation.getWorld() != null) {
+                    playerLocation.getWorld().dropItemNaturally(playerLocation, extraItem);
                 }
             }
         } else {
-            Location dropLoc = blockLocation.clone().add(0.5, 0.5, 0.5);
-            for (ItemStack item : lootedItems) {
-                if (dropLoc.getWorld() != null) {
-                    dropLoc.getWorld().dropItemNaturally(dropLoc, item);
-                }
-            }
+            this.dropItemsAtBlock(blockLocation, lootedItems);
         }
 
+        String playerName = player.getName();
         for (String command : lootedCommands) {
-            String processed = command.replace("%player%", player.getName())
-                    .replace("%type%", treeDefinition.getKey())
-                    .replace("%xPos%", String.valueOf(blockLocation.getBlockX()))
-                    .replace("%yPos%", String.valueOf(blockLocation.getBlockY()))
-                    .replace("%zPos%", String.valueOf(blockLocation.getBlockZ()));
-            Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), processed);
+            String processed = resolveLootCommand(command, playerName, treeDefinition, blockLocation);
+            SchedulerUtils.runTask(UltimateTimberApi.getPlugin(),
+                    () -> Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), processed));
         }
     }
 
+    private void dropItemsAtBlock(@NotNull Location blockLocation, @NotNull List<ItemStack> items) {
+        SchedulerUtils.runLocationTask(UltimateTimberApi.getPlugin(), blockLocation, () -> {
+            Location dropLocation = blockLocation.clone().add(0.5, 0.5, 0.5);
+            if (dropLocation.getWorld() == null) {
+                return;
+            }
+
+            for (ItemStack item : items) {
+                dropLocation.getWorld().dropItemNaturally(dropLocation, item);
+            }
+        });
+    }
+
+    private LootSelection selectLoot(@NotNull TreeDefinition treeDefinition,
+                                     @NotNull TreeBlock<?> treeBlock,
+                                     boolean hasSilkTouch,
+                                     boolean isForEntireTree) {
+        if (isForEntireTree) {
+            return new LootSelection(
+                    combineLoot(treeDefinition.getEntireTreeLoot(), this.globalEntireTreeLoot),
+                    false
+            );
+        }
+
+        if (this.config != null && this.config.isApplySilkTouch() && hasSilkTouch) {
+            return new LootSelection(List.of(), true);
+        }
+
+        return switch (treeBlock.treeBlockType()) {
+            case LOG -> new LootSelection(
+                    combineLoot(treeDefinition.getLogLoot(), this.globalLogLoot),
+                    treeDefinition.shouldDropOriginalLog()
+            );
+            case LEAF -> new LootSelection(
+                    combineLoot(treeDefinition.getLeafLoot(), this.globalLeafLoot),
+                    treeDefinition.shouldDropOriginalLeaf()
+            );
+        };
+    }
+
+    private List<TreeLoot> combineLoot(Collection<TreeLoot> treeLoot, Collection<TreeLoot> globalLoot) {
+        List<TreeLoot> combinedLoot = new ArrayList<>(treeLoot);
+        combinedLoot.addAll(globalLoot);
+        return combinedLoot;
+    }
+
+    private @NotNull String resolveLootCommand(@NotNull String command,
+                                               @NotNull String playerName,
+                                               @NotNull TreeDefinition treeDefinition,
+                                               @NotNull Location blockLocation) {
+        List<MiniMessagePlaceholder> placeholders = List.of(
+                new MiniMessagePlaceholder("player", playerName),
+                new MiniMessagePlaceholder("type", treeDefinition.getKey()),
+                new MiniMessagePlaceholder("x-pos", blockLocation.getBlockX()),
+                new MiniMessagePlaceholder("y-pos", blockLocation.getBlockY()),
+                new MiniMessagePlaceholder("z-pos", blockLocation.getBlockZ())
+        );
+
+        String resolvedCommand = command;
+        for (MiniMessagePlaceholder placeholder : placeholders) {
+            resolvedCommand = placeholder.replace(resolvedCommand);
+        }
+        return resolvedCommand;
+    }
+
     @Override
-    public @NotNull Set<Material> getPlantableSoilMaterials(@NotNull TreeDefinition treeDefinition) {
+    public synchronized @NotNull Set<Material> getPlantableSoilMaterials(@NotNull TreeDefinition treeDefinition) {
         Set<Material> soils = new HashSet<>(treeDefinition.getPlantableSoilMaterials());
         soils.addAll(this.globalPlantableSoil);
         return soils;
     }
 
     @Override
-    public @Nullable ItemStack getRequiredAxe() {
+    public synchronized @Nullable ItemStack getRequiredAxe() {
         return this.requiredAxe != null ? this.requiredAxe.clone() : null;
     }
 
     @Override
-    public boolean isGlobalAxeRequired() {
+    public synchronized boolean isGlobalAxeRequired() {
         return this.globalAxeRequired;
+    }
+
+    private record LootSelection(List<TreeLoot> configuredLoot, boolean dropOriginalBlock) {
     }
 }

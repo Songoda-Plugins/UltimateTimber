@@ -1,10 +1,10 @@
 package com.songoda.ultimatetimber.config;
 
+import com.songoda.core.SongodaPlugin;
 import com.songoda.core.vortexcore.vinject.annotation.RegisterReloadHook;
 import com.songoda.ultimatetimber.config.entry.GlobalLootConfig;
 import com.songoda.ultimatetimber.config.entry.HooksConfig;
 import com.songoda.ultimatetimber.config.entry.QueuedBlockReplacementConfig;
-import com.songoda.ultimatetimber.config.entry.RequiredAxeConfig;
 import com.songoda.ultimatetimber.config.entry.TreeConfigEntry;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,8 +12,8 @@ import net.vortexdevelopment.vinject.annotation.lifecycle.OnLoad;
 import net.vortexdevelopment.vinject.annotation.yaml.Comment;
 import net.vortexdevelopment.vinject.annotation.yaml.Key;
 import net.vortexdevelopment.vinject.annotation.yaml.YamlConfiguration;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -30,10 +30,6 @@ import java.util.Set;
 @RegisterReloadHook(priority = 100)
 @YamlConfiguration(file = "config.yml")
 public class TimberConfig {
-
-    @Comment("The locale to use for messages.")
-    @Key("Locale")
-    private String locale = "en_US";
 
     @Comment("A list of worlds where UltimateTimber is disabled.")
     @Key("Disabled Worlds")
@@ -186,7 +182,7 @@ public class TimberConfig {
 
     @Comment("Custom required axe item.")
     @Key("Required Axe")
-    private RequiredAxeConfig requiredAxe = new RequiredAxeConfig();
+    private ItemStack requiredAxe;
 
     @Comment("Individual tree definitions.")
     @Key("Trees")
@@ -197,17 +193,27 @@ public class TimberConfig {
     @OnLoad
     public void onLoad() {
         this.resolvedFragileBlocks = new HashSet<>();
-        if (this.fragileBlocks != null) {
-            for (String blockName : this.fragileBlocks) {
-                if (blockName != null && !blockName.trim().isEmpty()) {
-                    Material mat = Material.matchMaterial(blockName.trim());
-                    if (mat != null) {
-                        this.resolvedFragileBlocks.add(mat);
-                    } else {
-                        Bukkit.getLogger().warning("[UltimateTimber] Warning: Invalid material '" + blockName + "' in fragile blocks.");
-                    }
-                }
+        if (this.fragileBlocks == null) {
+            return;
+        }
+
+        for (String blockName : this.fragileBlocks) {
+            if (blockName == null) {
+                continue;
             }
+
+            String materialName = blockName.trim();
+            if (materialName.isEmpty()) {
+                continue;
+            }
+
+            Material material = Material.matchMaterial(materialName);
+            if (material == null) {
+                SongodaPlugin.getInstance().getLogger().warning("[UltimateTimber] Warning: Invalid material '" + blockName + "' in fragile blocks.");
+                continue;
+            }
+
+            this.resolvedFragileBlocks.add(material);
         }
     }
 }

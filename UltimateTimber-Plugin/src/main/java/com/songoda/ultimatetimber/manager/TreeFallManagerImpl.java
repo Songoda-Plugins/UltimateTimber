@@ -2,13 +2,11 @@ package com.songoda.ultimatetimber.manager;
 
 import com.songoda.core.vortexcore.hooks.internal.ReloadHook;
 import com.songoda.core.vortexcore.vinject.annotation.RegisterReloadHook;
-import com.songoda.ultimatetimber.api.event.TreeFallEvent;
 import com.songoda.ultimatetimber.api.event.TreeFellEvent;
 import com.songoda.ultimatetimber.api.manager.ChoppingManager;
 import com.songoda.ultimatetimber.api.manager.SaplingManager;
 import com.songoda.ultimatetimber.api.manager.TreeAnimationManager;
 import com.songoda.ultimatetimber.api.manager.TreeDefinitionManager;
-import com.songoda.ultimatetimber.api.manager.TreeDetectionManager;
 import com.songoda.ultimatetimber.api.manager.TreeFallManager;
 import com.songoda.ultimatetimber.api.misc.OnlyToppleWhile;
 import com.songoda.ultimatetimber.api.tree.DetectedTree;
@@ -39,26 +37,18 @@ import java.util.Random;
 @RegisterReloadHook
 public class TreeFallManagerImpl implements TreeFallManager, ReloadHook {
 
+    private final Random random = new Random();
     @Inject
     private TimberConfig config;
-
     @Inject
     private TreeDefinitionManager treeDefinitionManager;
-
-    @Inject
-    private TreeDetectionManager treeDetectionManager;
-
     @Inject
     private TreeAnimationManager treeAnimationManager;
-
     @Inject
     private ChoppingManager choppingManager;
-
     @Inject
     private SaplingManager saplingManager;
-
     private int maxLogsPerChop = 150;
-    private final Random random = new Random();
 
     @PostConstruct
     public void initialize() {
@@ -67,9 +57,7 @@ public class TreeFallManagerImpl implements TreeFallManager, ReloadHook {
 
     @Override
     public void onReload() {
-        if (this.config != null) {
-            this.maxLogsPerChop = this.config.getMaxLogsPerChop();
-        }
+        this.maxLogsPerChop = this.config.getMaxLogsPerChop();
     }
 
     @Override
@@ -115,15 +103,15 @@ public class TreeFallManagerImpl implements TreeFallManager, ReloadHook {
 
     @Override
     public void toppleTree(@NotNull Player player, @NotNull DetectedTree detectedTree, @Nullable ItemStack tool) {
-        detectedTree.getDetectedTreeBlocks().sortAndLimit(this.maxLogsPerChop);
+        detectedTree.detectedTreeBlocks().sortAndLimit(this.maxLogsPerChop);
 
         this.choppingManager.cooldownPlayer(player);
 
         if (this.config != null && this.config.isDestroyInitiatedBlock()) {
-            TreeBlock<Block> initialLogBlock = detectedTree.getDetectedTreeBlocks().getInitialLogBlock();
+            TreeBlock<Block> initialLogBlock = detectedTree.detectedTreeBlocks().getInitialLogBlock();
             if (initialLogBlock != null) {
-                initialLogBlock.getBlock().setType(Material.AIR);
-                detectedTree.getDetectedTreeBlocks().remove(initialLogBlock);
+                initialLogBlock.block().setType(Material.AIR);
+                detectedTree.detectedTreeBlocks().remove(initialLogBlock);
             }
         }
 
@@ -131,7 +119,7 @@ public class TreeFallManagerImpl implements TreeFallManager, ReloadHook {
                 && tool.hasItemMeta()
                 && tool.getItemMeta().hasEnchant(Enchantment.SILK_TOUCH);
 
-        short toolDamage = getToolDamage(detectedTree.getDetectedTreeBlocks(), hasSilkTouch);
+        short toolDamage = getToolDamage(detectedTree.detectedTreeBlocks(), hasSilkTouch);
 
         if (player.getGameMode() != GameMode.CREATIVE && tool != null && !tool.getType().isAir()) {
             applyToolDamage(player, tool, toolDamage);
@@ -139,9 +127,9 @@ public class TreeFallManagerImpl implements TreeFallManager, ReloadHook {
 
         this.treeAnimationManager.runAnimation(detectedTree, player);
 
-        TreeBlock<Block> initialLog = detectedTree.getDetectedTreeBlocks().getInitialLogBlock();
+        TreeBlock<Block> initialLog = detectedTree.detectedTreeBlocks().getInitialLogBlock();
         if (initialLog != null) {
-            this.treeDefinitionManager.dropTreeLoot(detectedTree.getTreeDefinition(), initialLog, player, false, true);
+            this.treeDefinitionManager.dropTreeLoot(detectedTree.treeDefinition(), initialLog, player, false, true);
         }
 
         TreeFellEvent treeFellEvent = new TreeFellEvent(player, detectedTree);

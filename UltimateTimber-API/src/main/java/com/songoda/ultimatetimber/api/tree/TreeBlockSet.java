@@ -2,16 +2,16 @@ package com.songoda.ultimatetimber.api.tree;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * A specialized collection storing the blocks belonging to a detected or animated tree.
@@ -20,25 +20,25 @@ import java.util.stream.Collectors;
  */
 public class TreeBlockSet<T> implements Collection<TreeBlock<T>> {
     private final TreeBlock<T> initialLogBlock;
-    private List<TreeBlock<T>> logBlocks;
+    private final List<TreeBlock<T>> logBlocks;
     private final List<TreeBlock<T>> leafBlocks;
     private final Set<TreeBlock<T>> allTreeBlocks;
     private final Set<TreeBlock<T>> allTreeBlocksView;
+    private final List<TreeBlock<T>> logBlocksView;
+    private final List<TreeBlock<T>> leafBlocksView;
 
     public TreeBlockSet() {
-        this.initialLogBlock = null;
-        this.logBlocks = new LinkedList<>();
-        this.leafBlocks = new LinkedList<>();
-        this.allTreeBlocks = new HashSet<>();
-        this.allTreeBlocksView = Collections.unmodifiableSet(this.allTreeBlocks);
+        this(null);
     }
 
     public TreeBlockSet(@Nullable TreeBlock<T> initialLogBlock) {
         this.initialLogBlock = initialLogBlock;
-        this.logBlocks = new LinkedList<>();
-        this.leafBlocks = new LinkedList<>();
+        this.logBlocks = new ArrayList<>();
+        this.leafBlocks = new ArrayList<>();
         this.allTreeBlocks = new HashSet<>();
         this.allTreeBlocksView = Collections.unmodifiableSet(this.allTreeBlocks);
+        this.logBlocksView = Collections.unmodifiableList(this.logBlocks);
+        this.leafBlocksView = Collections.unmodifiableList(this.leafBlocks);
 
         if (initialLogBlock != null) {
             this.logBlocks.add(initialLogBlock);
@@ -61,7 +61,7 @@ public class TreeBlockSet<T> implements Collection<TreeBlock<T>> {
      * @return An unmodifiable List of TreeBlocks
      */
     public @NotNull List<TreeBlock<T>> getLogBlocks() {
-        return Collections.unmodifiableList(this.logBlocks);
+        return this.logBlocksView;
     }
 
     /**
@@ -70,7 +70,7 @@ public class TreeBlockSet<T> implements Collection<TreeBlock<T>> {
      * @return An unmodifiable List of TreeBlocks
      */
     public @NotNull List<TreeBlock<T>> getLeafBlocks() {
-        return Collections.unmodifiableList(this.leafBlocks);
+        return this.leafBlocksView;
     }
 
     /**
@@ -104,12 +104,12 @@ public class TreeBlockSet<T> implements Collection<TreeBlock<T>> {
     }
 
     @Override
-    public Iterator<TreeBlock<T>> iterator() {
+    public @NonNull Iterator<TreeBlock<T>> iterator() {
         return this.getAllTreeBlocks().iterator();
     }
 
     @Override
-    public Object[] toArray() {
+    public Object @NonNull [] toArray() {
         return this.getAllTreeBlocks().toArray();
     }
 
@@ -124,7 +124,7 @@ public class TreeBlockSet<T> implements Collection<TreeBlock<T>> {
         }
 
         boolean added;
-        switch (treeBlock.getTreeBlockType()) {
+        switch (treeBlock.treeBlockType()) {
             case LOG:
                 added = this.logBlocks.add(treeBlock);
                 break;
@@ -152,7 +152,7 @@ public class TreeBlockSet<T> implements Collection<TreeBlock<T>> {
         }
 
         boolean removed;
-        switch (treeBlock.getTreeBlockType()) {
+        switch (treeBlock.treeBlockType()) {
             case LOG:
                 removed = this.logBlocks.remove(treeBlock);
                 break;
@@ -218,22 +218,18 @@ public class TreeBlockSet<T> implements Collection<TreeBlock<T>> {
     }
 
     public void sortAndLimit(int max) {
-        if (this.logBlocks.size() < max) {
+        int limit = Math.max(1, max);
+        if (this.logBlocks.size() < limit) {
             return;
         }
 
-        this.logBlocks = this.logBlocks.stream().sorted(Comparator.comparingInt(b -> b.getLocation().getBlockY()))
-                .limit(max).collect(Collectors.toList());
+        this.logBlocks.sort(Comparator.comparingInt(block -> block.getLocation().getBlockY()));
+        if (this.logBlocks.size() > limit) {
+            this.logBlocks.subList(limit, this.logBlocks.size()).clear();
+        }
 
         int highest = this.logBlocks.get(this.logBlocks.size() - 1).getLocation().getBlockY();
-
-        if (this.logBlocks.size() >= max) {
-            for (TreeBlock<T> leafBlock : new LinkedList<>(this.leafBlocks)) {
-                if (leafBlock.getLocation().getY() > highest) {
-                    this.leafBlocks.remove(leafBlock);
-                }
-            }
-        }
+        this.leafBlocks.removeIf(leafBlock -> leafBlock.getLocation().getBlockY() > highest);
 
         this.rebuildAllTreeBlocksSet();
     }
@@ -275,7 +271,7 @@ public class TreeBlockSet<T> implements Collection<TreeBlock<T>> {
     }
 
     @Override
-    public <T> T[] toArray(T[] a) {
+    public <T> T @NonNull [] toArray(T @NonNull [] a) {
         return this.getAllTreeBlocks().toArray(a);
     }
 }

@@ -2,3 +2,4 @@ name: ${project.name}
 version: ${project.version}
 main: com.songoda.ultimatetimber.UltimateTimber
 api-version: '1.21'
+folia-supported: true

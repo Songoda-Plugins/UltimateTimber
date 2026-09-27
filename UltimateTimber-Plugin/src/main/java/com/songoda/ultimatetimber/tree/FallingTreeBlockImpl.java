@@ -16,7 +16,7 @@ public class FallingTreeBlockImpl implements TreeBlock<FallingBlock> {
     }
 
     @Override
-    public @NotNull FallingBlock getBlock() {
+    public @NotNull FallingBlock block() {
         return this.fallingBlock;
     }
 
@@ -26,7 +26,7 @@ public class FallingTreeBlockImpl implements TreeBlock<FallingBlock> {
     }
 
     @Override
-    public @NotNull TreeBlockType getTreeBlockType() {
+    public @NotNull TreeBlockType treeBlockType() {
         return this.treeBlockType;
     }
 }

@@ -1,11 +1,11 @@
 package com.songoda.ultimatetimber.config.entry;
 
+import com.songoda.core.SongodaPlugin;
 import lombok.Getter;
 import lombok.Setter;
 import net.vortexdevelopment.vinject.annotation.lifecycle.OnLoad;
 import net.vortexdevelopment.vinject.annotation.yaml.Key;
 import net.vortexdevelopment.vinject.annotation.yaml.YamlItem;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.jetbrains.annotations.Nullable;
 
@@ -74,69 +74,48 @@ public class TreeConfigEntry {
 
     @OnLoad
     public void onLoad() {
-        this.resolvedLogs = new HashSet<>();
-        if (this.logs != null) {
-            for (String item : this.logs) {
-                if (item != null && !item.trim().isEmpty()) {
-                    Material mat = Material.matchMaterial(item.trim());
-                    if (mat != null) {
-                        this.resolvedLogs.add(mat);
-                    } else {
-                        Bukkit.getLogger().warning("[UltimateTimber] Warning: Invalid log material '" + item + "' in tree definition.");
-                    }
-                }
-            }
+        this.resolvedLogs = resolveConfiguredMaterials(this.logs, "log");
+        this.resolvedLeaves = resolveConfiguredMaterials(this.leaves, "leaf");
+        this.resolvedSapling = resolveConfiguredMaterial(this.sapling, "sapling");
+        this.resolvedPlantableSoil = resolveConfiguredMaterials(this.plantableSoil, "soil");
+        this.resolvedRequiredTools = resolveConfiguredMaterials(this.requiredTools, "tool");
+    }
+
+    private Set<Material> resolveConfiguredMaterials(List<String> configuredMaterials, String materialType) {
+        Set<Material> resolvedMaterials = new HashSet<>();
+        if (configuredMaterials == null) {
+            return resolvedMaterials;
         }
 
-        this.resolvedLeaves = new HashSet<>();
-        if (this.leaves != null) {
-            for (String item : this.leaves) {
-                if (item != null && !item.trim().isEmpty()) {
-                    Material mat = Material.matchMaterial(item.trim());
-                    if (mat != null) {
-                        this.resolvedLeaves.add(mat);
-                    } else {
-                        Bukkit.getLogger().warning("[UltimateTimber] Warning: Invalid leaf material '" + item + "' in tree definition.");
-                    }
-                }
+        for (String configuredMaterial : configuredMaterials) {
+            Material material = resolveConfiguredMaterial(configuredMaterial, materialType);
+            if (material == null) {
+                continue;
             }
+
+            resolvedMaterials.add(material);
         }
 
-        this.resolvedSapling = null;
-        if (this.sapling != null && !this.sapling.trim().isEmpty()) {
-            this.resolvedSapling = Material.matchMaterial(this.sapling.trim());
-            if (this.resolvedSapling == null) {
-                Bukkit.getLogger().warning("[UltimateTimber] Warning: Invalid sapling material '" + this.sapling + "' in tree definition.");
-            }
+        return resolvedMaterials;
+    }
+
+    private @Nullable Material resolveConfiguredMaterial(@Nullable String configuredMaterial, String materialType) {
+        if (configuredMaterial == null) {
+            return null;
         }
 
-        this.resolvedPlantableSoil = new HashSet<>();
-        if (this.plantableSoil != null) {
-            for (String item : this.plantableSoil) {
-                if (item != null && !item.trim().isEmpty()) {
-                    Material mat = Material.matchMaterial(item.trim());
-                    if (mat != null) {
-                        this.resolvedPlantableSoil.add(mat);
-                    } else {
-                        Bukkit.getLogger().warning("[UltimateTimber] Warning: Invalid soil material '" + item + "' in tree definition.");
-                    }
-                }
-            }
+        String materialName = configuredMaterial.trim();
+        if (materialName.isEmpty() || materialName.equals("{}") || materialName.equals("[]")) {
+            return null;
         }
 
-        this.resolvedRequiredTools = new HashSet<>();
-        if (this.requiredTools != null) {
-            for (String item : this.requiredTools) {
-                if (item != null && !item.trim().isEmpty()) {
-                    Material mat = Material.matchMaterial(item.trim());
-                    if (mat != null) {
-                        this.resolvedRequiredTools.add(mat);
-                    } else {
-                        Bukkit.getLogger().warning("[UltimateTimber] Warning: Invalid tool material '" + item + "' in tree definition.");
-                    }
-                }
-            }
+        Material material = Material.matchMaterial(materialName);
+        if (material != null) {
+            return material;
         }
+
+        SongodaPlugin.getInstance().getLogger().warning("[UltimateTimber] Warning: Invalid " + materialType + " material '" + configuredMaterial + "' in tree definition.");
+        return null;
     }
 
     public @Nullable Material getResolvedSapling() {

@@ -4,40 +4,35 @@ import com.songoda.core.vortexcore.hooks.internal.ReloadHook;
 import com.songoda.core.vortexcore.vinject.annotation.RegisterReloadHook;
 import com.songoda.ultimatetimber.api.manager.PlacedBlockManager;
 import com.songoda.ultimatetimber.config.TimberConfig;
+import com.songoda.ultimatetimber.utils.LongSet;
+import com.songoda.ultimatetimber.utils.TreeGeometry;
 import net.vortexdevelopment.vinject.annotation.Inject;
 import net.vortexdevelopment.vinject.annotation.component.Component;
 import net.vortexdevelopment.vinject.annotation.lifecycle.PostConstruct;
-import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
-
 /**
  * Service tracking player placed blocks to avoid toppling player constructions.
+ *
+ * <p>Blocks are stored as packed coordinate keys so probing this repository allocates nothing, and
+ * entries are evicted in insertion order once the configured memory size is reached. Tracked blocks
+ * survive reloads, only the memory bound is reapplied.
  */
 @Component
 @RegisterReloadHook
 public class PlacedBlockManagerImpl implements PlacedBlockManager, ReloadHook {
 
+    private static final int DEFAULT_MEMORY_SIZE = 5000;
+    private final LongSet placedBlocks = new LongSet();
     @Inject
     private TimberConfig config;
+    private long[] insertionOrder = new long[DEFAULT_MEMORY_SIZE];
+    private int insertionCursor;
+    private int insertionCount;
 
-    private Set<Location> placedBlocks;
     private boolean ignorePlacedBlocks;
-    private int maxPlacedBlockMemorySize;
-
-    public PlacedBlockManagerImpl() {
-        this.placedBlocks = Collections.synchronizedSet(Collections.newSetFromMap(new LinkedHashMap<Location, Boolean>() {
-            @Override
-            protected boolean removeEldestEntry(Map.Entry<Location, Boolean> eldest) {
-                return this.size() > (maxPlacedBlockMemorySize > 0 ? maxPlacedBlockMemorySize : 5000);
-            }
-        }));
-    }
+    private int maxPlacedBlockMemorySize = DEFAULT_MEMORY_SIZE;
 
     @PostConstruct
     public void initialize() {
@@ -45,28 +40,54 @@ public class PlacedBlockManagerImpl implements PlacedBlockManager, ReloadHook {
     }
 
     @Override
-    public void onReload() {
+    public synchronized void onReload() {
         this.ignorePlacedBlocks = this.config.isIgnorePlacedBlocks();
-        this.maxPlacedBlockMemorySize = this.config.getIgnorePlacedBlocksMemorySize();
-        this.placedBlocks = Collections.synchronizedSet(Collections.newSetFromMap(new LinkedHashMap<Location, Boolean>() {
-            @Override
-            protected boolean removeEldestEntry(Map.Entry<Location, Boolean> eldest) {
-                return this.size() > PlacedBlockManagerImpl.this.maxPlacedBlockMemorySize;
+        this.maxPlacedBlockMemorySize = Math.max(1, this.config.getIgnorePlacedBlocksMemorySize());
+
+        if (this.insertionOrder.length != this.maxPlacedBlockMemorySize) {
+            this.insertionOrder = new long[this.maxPlacedBlockMemorySize];
+            this.insertionCursor = 0;
+            this.insertionCount = 0;
+
+            // Insertion order is lost when the bound changes, so drop the excess instead of keeping
+            // entries that can no longer be evicted in order.
+            if (this.placedBlocks.size() > this.maxPlacedBlockMemorySize) {
+                this.placedBlocks.clear();
             }
-        }));
+        }
     }
 
     @Override
-    public boolean isBlockPlaced(@NotNull Block block) {
-        return this.ignorePlacedBlocks && this.placedBlocks.contains(block.getLocation());
+    public synchronized boolean isBlockPlaced(@NotNull Block block) {
+        return this.ignorePlacedBlocks && this.placedBlocks.contains(TreeGeometry.packBlockKey(block));
     }
 
     @Override
-    public void protectBlock(@NotNull Block block, boolean isPlaced) {
-        if (isPlaced) {
-            this.placedBlocks.add(block.getLocation());
-        } else {
-            this.placedBlocks.remove(block.getLocation());
+    public synchronized void protectBlock(@NotNull Block block, boolean isPlaced) {
+        long blockKey = TreeGeometry.packBlockKey(block);
+        if (!isPlaced) {
+            this.placedBlocks.remove(blockKey);
+            return;
+        }
+
+        if (!this.placedBlocks.add(blockKey)) {
+            return;
+        }
+
+        this.insertionOrder[this.insertionCursor] = blockKey;
+        this.insertionCursor = (this.insertionCursor + 1) % this.insertionOrder.length;
+        if (this.insertionCount < this.insertionOrder.length) {
+            this.insertionCount++;
+        }
+        evictOverflow();
+    }
+
+    private void evictOverflow() {
+        while (this.placedBlocks.size() > this.maxPlacedBlockMemorySize && this.insertionCount > 0) {
+            long eldest = this.insertionOrder[this.insertionCursor];
+            this.insertionCursor = (this.insertionCursor + 1) % this.insertionOrder.length;
+            this.insertionCount--;
+            this.placedBlocks.remove(eldest);
         }
     }
 }

@@ -28,11 +28,11 @@ public final class BlockUtils {
      */
     public static Collection<ItemStack> getBlockDrops(TreeBlock<?> treeBlock) {
         Set<ItemStack> drops = new HashSet<>();
-        if (treeBlock.getBlock() instanceof Block block) {
+        if (treeBlock.block() instanceof Block block) {
             if (!block.getType().isAir()) {
                 drops.add(new ItemStack(block.getType()));
             }
-        } else if (treeBlock.getBlock() instanceof FallingBlock fallingBlock) {
+        } else if (treeBlock.block() instanceof FallingBlock fallingBlock) {
             Material material = fallingBlock.getBlockData().getMaterial();
             if (!material.isAir()) {
                 drops.add(new ItemStack(material));
@@ -54,12 +54,12 @@ public final class BlockUtils {
     /**
      * Spawns a falling block using block data at the specified location.
      *
-     * @param location The spawn location
+     * @param location  The spawn location
      * @param blockData The block data
      * @return The spawned falling block entity
      */
     public static FallingBlock spawnFallingBlock(Location location, BlockData blockData) {
-        return location.getWorld().spawnFallingBlock(location, blockData);
+        return location.getWorld().spawn(location, FallingBlock.class, fallingBlock -> fallingBlock.setBlockData(blockData));
     }
 
     /**

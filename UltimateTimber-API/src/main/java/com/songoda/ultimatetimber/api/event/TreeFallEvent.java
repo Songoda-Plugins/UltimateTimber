@@ -19,6 +19,10 @@ public class TreeFallEvent extends TreeEvent implements Cancellable {
         super(who, detectedTree);
     }
 
+    public static @NotNull HandlerList getHandlerList() {
+        return HANDLERS;
+    }
+
     @Override
     public @NotNull HandlerList getHandlers() {
         return HANDLERS;
@@ -32,9 +36,5 @@ public class TreeFallEvent extends TreeEvent implements Cancellable {
     @Override
     public void setCancelled(boolean cancel) {
         this.cancelled = cancel;
-    }
-
-    public static @NotNull HandlerList getHandlerList() {
-        return HANDLERS;
     }
 }

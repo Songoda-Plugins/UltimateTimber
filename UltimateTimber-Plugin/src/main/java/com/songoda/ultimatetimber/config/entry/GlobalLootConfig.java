@@ -1,11 +1,11 @@
 package com.songoda.ultimatetimber.config.entry;
 
+import com.songoda.core.SongodaPlugin;
 import lombok.Getter;
 import lombok.Setter;
 import net.vortexdevelopment.vinject.annotation.lifecycle.OnLoad;
 import net.vortexdevelopment.vinject.annotation.yaml.Key;
 import net.vortexdevelopment.vinject.annotation.yaml.YamlItem;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 
 import java.util.ArrayList;
@@ -59,32 +59,35 @@ public class GlobalLootConfig {
 
     @OnLoad
     public void onLoad() {
-        this.resolvedPlantableSoil = new HashSet<>();
-        if (this.plantableSoil != null) {
-            for (String soil : this.plantableSoil) {
-                if (soil != null && !soil.trim().isEmpty()) {
-                    Material mat = Material.matchMaterial(soil.trim());
-                    if (mat != null) {
-                        this.resolvedPlantableSoil.add(mat);
-                    } else {
-                        Bukkit.getLogger().warning("[UltimateTimber] Warning: Invalid material '" + soil + "' in global plantable soil.");
-                    }
-                }
-            }
+        this.resolvedPlantableSoil = resolveMaterials(this.plantableSoil, "global plantable soil");
+        this.resolvedRequiredTools = resolveMaterials(this.requiredTools, "global required tools");
+    }
+
+    private Set<Material> resolveMaterials(List<String> configuredMaterials, String settingName) {
+        Set<Material> resolvedMaterials = new HashSet<>();
+        if (configuredMaterials == null) {
+            return resolvedMaterials;
         }
 
-        this.resolvedRequiredTools = new HashSet<>();
-        if (this.requiredTools != null) {
-            for (String tool : this.requiredTools) {
-                if (tool != null && !tool.trim().isEmpty()) {
-                    Material mat = Material.matchMaterial(tool.trim());
-                    if (mat != null) {
-                        this.resolvedRequiredTools.add(mat);
-                    } else {
-                        Bukkit.getLogger().warning("[UltimateTimber] Warning: Invalid material '" + tool + "' in global required tools.");
-                    }
-                }
+        for (String configuredMaterial : configuredMaterials) {
+            if (configuredMaterial == null) {
+                continue;
             }
+
+            String materialName = configuredMaterial.trim();
+            if (materialName.isEmpty() || materialName.equals("{}") || materialName.equals("[]")) {
+                continue;
+            }
+
+            Material material = Material.matchMaterial(materialName);
+            if (material == null) {
+                SongodaPlugin.getInstance().getLogger().warning("[UltimateTimber] Warning: Invalid material '" + configuredMaterial + "' in " + settingName + ".");
+                continue;
+            }
+
+            resolvedMaterials.add(material);
         }
+
+        return resolvedMaterials;
     }
 }

@@ -13,7 +13,7 @@ public interface BlockReplacementManager {
     /**
      * Replaces a tree block with air and triggers sapling replanting according to queuing mode.
      *
-     * @param treeBlock The tree block to replace
+     * @param treeBlock      The tree block to replace
      * @param treeDefinition The associated tree definition
      */
     void replaceBlock(@NotNull TreeBlock<Block> treeBlock, @NotNull TreeDefinition treeDefinition);

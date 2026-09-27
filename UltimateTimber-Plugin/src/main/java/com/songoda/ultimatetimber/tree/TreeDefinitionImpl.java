@@ -20,8 +20,10 @@ public class TreeDefinitionImpl implements TreeDefinition {
     private final Set<Material> leafMaterials;
     private final Material saplingMaterial;
     private final Set<Material> plantableSoilMaterials;
-    @Getter private final double maxLogDistanceFromTrunk;
-    @Getter private final int maxLeafDistanceFromLog;
+    @Getter
+    private final double maxLogDistanceFromTrunk;
+    @Getter
+    private final int maxLeafDistanceFromLog;
     private final boolean detectLeavesDiagonally;
     private final boolean dropOriginalLog;
     private final boolean dropOriginalLeaf;
@@ -29,7 +31,8 @@ public class TreeDefinitionImpl implements TreeDefinition {
     private final Set<TreeLoot> leafLoot;
     private final Set<TreeLoot> entireTreeLoot;
     private final Set<ItemStack> requiredTools;
-    @Getter private final boolean requiredAxe;
+    @Getter
+    private final boolean requiredAxe;
 
     public TreeDefinitionImpl(@NotNull String key,
                               @NotNull Set<Material> logMaterials,

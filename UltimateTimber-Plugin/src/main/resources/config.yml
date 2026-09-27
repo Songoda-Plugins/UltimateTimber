@@ -1,5 +1,3 @@
-Locale: en_US
-
 Disabled Worlds:
   - disabled_world_name
 
@@ -51,6 +49,9 @@ Hooks:
   Apply Extra Drops: true
   Require Ability Active: false
 
+# Loot commands accept these placeholders for global and tree-specific entries:
+# <player>, <type>, <x-pos>, <y-pos>, and <z-pos>.
+# <type> is the tree definition key; position placeholders use the current loot block's coordinates.
 Global Loot:
   Plantable Soil:
     - GRASS_BLOCK
@@ -58,12 +59,12 @@ Global Loot:
     - COARSE_DIRT
     - PODZOL
     - ROOTED_DIRT
-  Log Loot: {}
+  Log Loot: { }
   Leaf Loot:
     '0':
       Material: GOLDEN_APPLE
       Chance: 0.1
-  Entire Tree Loot: {}
+  Entire Tree Loot: { }
   Required Tools:
     - WOODEN_AXE
     - STONE_AXE
@@ -74,7 +75,7 @@ Global Loot:
   Required Axe: false
 
 Required Axe:
-  Type: DIAMOND_AXE
+  Material: DIAMOND_AXE
   Name: "<green>An Epic Axe"
   Lore:
     - "<gray>This axe... it's awesome."
@@ -82,7 +83,8 @@ Required Axe:
   Enchants:
     - "unbreaking:3"
     - "efficiency:5"
-  Nbt: ultimatetimber_axe
+  PDC:
+    - "ultimatetimber:axe:BYTE:1"
 
 Trees:
   oak:
@@ -95,13 +97,13 @@ Trees:
       - OAK_LEAVES
       - VINE
     Sapling: OAK_SAPLING
-    Plantable Soil: []
+    Plantable Soil: [ ]
     Max Log Distance From Trunk: 6.0
     Max Leaf Distance From Log: 6
     Search For Leaves Diagonally: false
     Drop Original Log: true
     Drop Original Leaf: false
-    Log Loot: {}
+    Log Loot: { }
     Leaf Loot:
       '0':
         Material: OAK_SAPLING
@@ -109,8 +111,8 @@ Trees:
       '1':
         Material: APPLE
         Chance: 0.5
-    Entire Tree Loot: {}
-    Required Tools: []
+    Entire Tree Loot: { }
+    Required Tools: [ ]
     Required Axe: false
 
   spruce:
@@ -123,19 +125,19 @@ Trees:
       - SPRUCE_LEAVES
       - VINE
     Sapling: SPRUCE_SAPLING
-    Plantable Soil: []
+    Plantable Soil: [ ]
     Max Log Distance From Trunk: 2.0
     Max Leaf Distance From Log: 6
     Search For Leaves Diagonally: false
     Drop Original Log: true
     Drop Original Leaf: false
-    Log Loot: {}
+    Log Loot: { }
     Leaf Loot:
       '0':
         Material: SPRUCE_SAPLING
         Chance: 5.0
-    Entire Tree Loot: {}
-    Required Tools: []
+    Entire Tree Loot: { }
+    Required Tools: [ ]
     Required Axe: false
 
   birch:
@@ -148,19 +150,19 @@ Trees:
       - BIRCH_LEAVES
       - VINE
     Sapling: BIRCH_SAPLING
-    Plantable Soil: []
+    Plantable Soil: [ ]
     Max Log Distance From Trunk: 1.0
     Max Leaf Distance From Log: 4
     Search For Leaves Diagonally: false
     Drop Original Log: true
     Drop Original Leaf: false
-    Log Loot: {}
+    Log Loot: { }
     Leaf Loot:
       '0':
         Material: BIRCH_SAPLING
         Chance: 5.0
-    Entire Tree Loot: {}
-    Required Tools: []
+    Entire Tree Loot: { }
+    Required Tools: [ ]
     Required Axe: false
 
   jungle:
@@ -173,19 +175,19 @@ Trees:
       - JUNGLE_LEAVES
       - VINE
     Sapling: JUNGLE_SAPLING
-    Plantable Soil: []
+    Plantable Soil: [ ]
     Max Log Distance From Trunk: 6.0
     Max Leaf Distance From Log: 6
     Search For Leaves Diagonally: false
     Drop Original Log: true
     Drop Original Leaf: false
-    Log Loot: {}
+    Log Loot: { }
     Leaf Loot:
       '0':
         Material: JUNGLE_SAPLING
         Chance: 2.5
-    Entire Tree Loot: {}
-    Required Tools: []
+    Entire Tree Loot: { }
+    Required Tools: [ ]
     Required Axe: false
 
   acacia:
@@ -197,19 +199,19 @@ Trees:
     Leaves:
       - ACACIA_LEAVES
     Sapling: ACACIA_SAPLING
-    Plantable Soil: []
+    Plantable Soil: [ ]
     Max Log Distance From Trunk: 4.0
     Max Leaf Distance From Log: 5
     Search For Leaves Diagonally: false
     Drop Original Log: true
     Drop Original Leaf: false
-    Log Loot: {}
+    Log Loot: { }
     Leaf Loot:
       '0':
         Material: ACACIA_SAPLING
         Chance: 5.0
-    Entire Tree Loot: {}
-    Required Tools: []
+    Entire Tree Loot: { }
+    Required Tools: [ ]
     Required Axe: false
 
   dark_oak:
@@ -222,13 +224,13 @@ Trees:
       - DARK_OAK_LEAVES
       - VINE
     Sapling: DARK_OAK_SAPLING
-    Plantable Soil: []
+    Plantable Soil: [ ]
     Max Log Distance From Trunk: 4.0
     Max Leaf Distance From Log: 5
     Search For Leaves Diagonally: false
     Drop Original Log: true
     Drop Original Leaf: false
-    Log Loot: {}
+    Log Loot: { }
     Leaf Loot:
       '0':
         Material: DARK_OAK_SAPLING
@@ -236,8 +238,8 @@ Trees:
       '1':
         Material: APPLE
         Chance: 0.5
-    Entire Tree Loot: {}
-    Required Tools: []
+    Entire Tree Loot: { }
+    Required Tools: [ ]
     Required Axe: false
 
   azalea:
@@ -251,19 +253,19 @@ Trees:
       - FLOWERING_AZALEA_LEAVES
       - VINE
     Sapling: AZALEA
-    Plantable Soil: []
+    Plantable Soil: [ ]
     Max Log Distance From Trunk: 3.0
     Max Leaf Distance From Log: 4
     Search For Leaves Diagonally: true
     Drop Original Log: true
     Drop Original Leaf: false
-    Log Loot: {}
+    Log Loot: { }
     Leaf Loot:
       '0':
         Material: AZALEA
         Chance: 5.0
-    Entire Tree Loot: {}
-    Required Tools: []
+    Entire Tree Loot: { }
+    Required Tools: [ ]
     Required Axe: false
 
   cherry:
@@ -275,13 +277,13 @@ Trees:
     Leaves:
       - CHERRY_LEAVES
     Sapling: CHERRY_SAPLING
-    Plantable Soil: []
+    Plantable Soil: [ ]
     Max Log Distance From Trunk: 10.0
     Max Leaf Distance From Log: 6
     Search For Leaves Diagonally: false
     Drop Original Log: true
     Drop Original Leaf: false
-    Log Loot: {}
+    Log Loot: { }
     Leaf Loot:
       '0':
         Material: CHERRY_SAPLING
@@ -289,8 +291,8 @@ Trees:
       '1':
         Material: STICK
         Chance: 2.5
-    Entire Tree Loot: {}
-    Required Tools: []
+    Entire Tree Loot: { }
+    Required Tools: [ ]
     Required Axe: false
 
   mangrove:
@@ -306,13 +308,13 @@ Trees:
       - MANGROVE_PROPAGULE
       - VINE
     Sapling: MANGROVE_PROPAGULE
-    Plantable Soil: []
+    Plantable Soil: [ ]
     Max Log Distance From Trunk: 30.0
     Max Leaf Distance From Log: 10
     Search For Leaves Diagonally: true
     Drop Original Log: true
     Drop Original Leaf: false
-    Log Loot: {}
+    Log Loot: { }
     Leaf Loot:
       '0':
         Material: MANGROVE_PROPAGULE
@@ -320,8 +322,8 @@ Trees:
       '1':
         Material: APPLE
         Chance: 0.5
-    Entire Tree Loot: {}
-    Required Tools: []
+    Entire Tree Loot: { }
+    Required Tools: [ ]
     Required Axe: false
 
   pale_oak:
@@ -334,13 +336,13 @@ Trees:
       - PALE_OAK_LEAVES
       - PALE_HANGING_MOSS
     Sapling: PALE_OAK_SAPLING
-    Plantable Soil: []
+    Plantable Soil: [ ]
     Max Log Distance From Trunk: 4.0
     Max Leaf Distance From Log: 5
     Search For Leaves Diagonally: false
     Drop Original Log: true
     Drop Original Leaf: false
-    Log Loot: {}
+    Log Loot: { }
     Leaf Loot:
       '0':
         Material: PALE_OAK_SAPLING
@@ -348,6 +350,6 @@ Trees:
       '1':
         Material: APPLE
         Chance: 0.5
-    Entire Tree Loot: {}
-    Required Tools: []
+    Entire Tree Loot: { }
+    Required Tools: [ ]
     Required Axe: false

@@ -16,7 +16,7 @@ public interface TreeBlock<T> {
      *
      * @return The Block for this TreeBlock
      */
-    @NotNull T getBlock();
+    @NotNull T block();
 
     /**
      * Gets the location of this TreeBlock.
@@ -30,5 +30,5 @@ public interface TreeBlock<T> {
      *
      * @return The TreeBlockType
      */
-    @NotNull TreeBlockType getTreeBlockType();
+    @NotNull TreeBlockType treeBlockType();
 }

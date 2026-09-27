@@ -44,25 +44,25 @@ public interface TreeDefinitionManager {
      * Narrows a set of tree definitions matching a specific block and block type.
      *
      * @param possibleTreeDefinitions Candidate tree definitions
-     * @param block The block to test
-     * @param treeBlockType The block type
+     * @param block                   The block to test
+     * @param treeBlockType           The block type
      * @return A narrowed Set of TreeDefinitions
      */
     @NotNull Set<TreeDefinition> narrowTreeDefinition(@NotNull Set<TreeDefinition> possibleTreeDefinitions,
-                                                     @NotNull Block block,
-                                                     @NotNull TreeBlockType treeBlockType);
+                                                      @NotNull Block block,
+                                                      @NotNull TreeBlockType treeBlockType);
 
     /**
      * Narrows a set of tree definitions matching a specific material and block type.
      *
      * @param possibleTreeDefinitions Candidate tree definitions
-     * @param material The material to match
-     * @param treeBlockType The block type
+     * @param material                The material to match
+     * @param treeBlockType           The block type
      * @return A narrowed Set of TreeDefinitions
      */
     @NotNull Set<TreeDefinition> narrowTreeDefinition(@NotNull Set<TreeDefinition> possibleTreeDefinitions,
-                                                     @Nullable Material material,
-                                                     @NotNull TreeBlockType treeBlockType);
+                                                      @Nullable Material material,
+                                                      @NotNull TreeBlockType treeBlockType);
 
     /**
      * Checks if a held tool is permitted to fell any configured tree type.
@@ -76,7 +76,7 @@ public interface TreeDefinitionManager {
      * Checks if a held tool is permitted to fell a specific tree type.
      *
      * @param treeDefinition The tree definition
-     * @param tool The tool item
+     * @param tool           The tool item
      * @return True if allowed
      */
     boolean isToolValidForTreeDefinition(@NotNull TreeDefinition treeDefinition, @Nullable ItemStack tool);
@@ -84,10 +84,10 @@ public interface TreeDefinitionManager {
     /**
      * Drops configured loot or executes reward commands for a tree block.
      *
-     * @param treeDefinition The tree definition
-     * @param treeBlock The tree block being dropped
-     * @param player The player felling the tree
-     * @param hasSilkTouch Whether silk touch applies
+     * @param treeDefinition  The tree definition
+     * @param treeBlock       The tree block being dropped
+     * @param player          The player felling the tree
+     * @param hasSilkTouch    Whether silk touch applies
      * @param isForEntireTree Whether this is the once-per-tree drop
      */
     void dropTreeLoot(@NotNull TreeDefinition treeDefinition,

@@ -14,12 +14,12 @@ public interface DetectedTree {
      *
      * @return The TreeDefinition of this detected tree
      */
-    @NotNull TreeDefinition getTreeDefinition();
+    @NotNull TreeDefinition treeDefinition();
 
     /**
      * Gets the blocks that were detected as part of this tree.
      *
      * @return A TreeBlockSet of detected Blocks
      */
-    @NotNull TreeBlockSet<Block> getDetectedTreeBlocks();
+    @NotNull TreeBlockSet<Block> detectedTreeBlocks();
 }

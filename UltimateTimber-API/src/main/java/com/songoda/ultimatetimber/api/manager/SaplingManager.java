@@ -14,7 +14,7 @@ public interface SaplingManager {
      * Replants a sapling at the position of the given tree block based on tree definition rules.
      *
      * @param treeDefinition The tree definition
-     * @param treeBlock The tree block to replant at
+     * @param treeBlock      The tree block to replant at
      */
     void replantSapling(@NotNull TreeDefinition treeDefinition, @NotNull TreeBlock<?> treeBlock);
 
@@ -22,7 +22,7 @@ public interface SaplingManager {
      * Replants a sapling with configured chance (e.g. for fallen leaf blocks hitting ground).
      *
      * @param treeDefinition The tree definition
-     * @param treeBlock The tree block to replant at
+     * @param treeBlock      The tree block to replant at
      */
     void replantSaplingWithChance(@NotNull TreeDefinition treeDefinition, @NotNull TreeBlock<?> treeBlock);
 

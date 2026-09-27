@@ -3,16 +3,12 @@ package com.songoda.ultimatetimber.api.tree;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
 
 /**
  * Represents configured bonus loot drops and/or console commands executed upon tree felling.
  */
-public class TreeLoot {
-    private final TreeBlockType treeBlockType;
-    private final ItemStack item;
-    private final String command;
-    private final double chance;
-
+public record TreeLoot(TreeBlockType treeBlockType, ItemStack item, String command, double chance) {
     public TreeLoot(@NotNull TreeBlockType treeBlockType, @Nullable ItemStack item, @Nullable String command, double chance) {
         this.treeBlockType = treeBlockType;
         this.item = item;
@@ -25,7 +21,8 @@ public class TreeLoot {
      *
      * @return The tree block type this loot is for
      */
-    public @NotNull TreeBlockType getTreeBlockType() {
+    @Override
+    public @NotNull TreeBlockType treeBlockType() {
         return this.treeBlockType;
     }
 
@@ -43,7 +40,8 @@ public class TreeLoot {
      *
      * @return An ItemStack this tree loot can drop
      */
-    public @Nullable ItemStack getItem() {
+    @Override
+    public @Nullable ItemStack item() {
         return this.item;
     }
 
@@ -61,7 +59,8 @@ public class TreeLoot {
      *
      * @return The command that this tree loot can run
      */
-    public @Nullable String getCommand() {
+    @Override
+    public @Nullable String command() {
         return this.command;
     }
 
@@ -70,12 +69,13 @@ public class TreeLoot {
      *
      * @return The percent chance this tree loot can drop
      */
-    public double getChance() {
+    @Override
+    public double chance() {
         return this.chance;
     }
 
     @Override
-    public String toString() {
+    public @NonNull String toString() {
         return "TreeLoot{" +
                 "treeBlockType=" + this.treeBlockType +
                 ", item=" + this.item +

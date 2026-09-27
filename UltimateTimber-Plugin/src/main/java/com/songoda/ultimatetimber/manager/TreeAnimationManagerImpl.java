@@ -1,8 +1,9 @@
 package com.songoda.ultimatetimber.manager;
 
 import com.songoda.core.vortexcore.hooks.internal.ReloadHook;
+import com.songoda.core.vortexcore.compatibility.folia.SchedulerUtils;
 import com.songoda.core.vortexcore.vinject.annotation.RegisterReloadHook;
-import com.songoda.ultimatetimber.UltimateTimber;
+import com.songoda.ultimatetimber.api.UltimateTimberApi;
 import com.songoda.ultimatetimber.animation.TreeAnimationCrumble;
 import com.songoda.ultimatetimber.animation.TreeAnimationDisintegrate;
 import com.songoda.ultimatetimber.animation.TreeAnimationFancy;
@@ -21,14 +22,11 @@ import com.songoda.ultimatetimber.utils.SoundUtils;
 import net.vortexdevelopment.vinject.annotation.Inject;
 import net.vortexdevelopment.vinject.annotation.component.Component;
 import net.vortexdevelopment.vinject.annotation.lifecycle.OnDestroy;
-import net.vortexdevelopment.vinject.annotation.lifecycle.PostConstruct;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashSet;
@@ -40,80 +38,73 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Component
 @RegisterReloadHook
-public class TreeAnimationManagerImpl implements TreeAnimationManager, ReloadHook, Runnable {
-
-    @Inject
-    private TimberConfig config;
-
-    @Inject
-    private TreeDefinitionManager treeDefinitionManager;
-
-    @Inject
-    private SaplingManager saplingManager;
+public class TreeAnimationManagerImpl implements TreeAnimationManager, ReloadHook {
 
     private final Set<TreeAnimation> activeAnimations = ConcurrentHashMap.newKeySet();
-    private BukkitTask task;
-
-    @PostConstruct
-    public void initialize() {
-        UltimateTimber plugin = UltimateTimber.getInstance();
-        this.task = Bukkit.getScheduler().runTaskTimer(plugin, this, 0L, 1L);
-    }
-
+    @Inject
+    private TimberConfig config;
+    @Inject
+    private TreeDefinitionManager treeDefinitionManager;
+    @Inject
+    private SaplingManager saplingManager;
     @OnDestroy
     public void onDestroy() {
-        if (this.task != null) {
-            this.task.cancel();
-            this.task = null;
-        }
-        this.activeAnimations.clear();
+        this.clearActiveAnimations();
     }
 
     @Override
     public void onReload() {
+        this.clearActiveAnimations();
+    }
+
+    private void clearActiveAnimations() {
+        for (TreeAnimation treeAnimation : this.activeAnimations) {
+            Set<TreeBlock<FallingBlock>> fallingBlocks;
+            synchronized (treeAnimation.getFallingTreeBlocks()) {
+                fallingBlocks = new HashSet<>(treeAnimation.getFallingTreeBlocks().getAllTreeBlocks());
+            }
+
+            for (TreeBlock<FallingBlock> fallingTreeBlock : fallingBlocks) {
+                treeAnimation.removeFallingBlock(fallingTreeBlock.block());
+            }
+        }
+
         this.activeAnimations.clear();
     }
 
     @Override
-    public void run() {
-        for (TreeAnimation treeAnimation : this.activeAnimations) {
-            Set<TreeBlock<FallingBlock>> groundedBlocks = new HashSet<>();
-            for (TreeBlock<FallingBlock> fallingTreeBlock : treeAnimation.getFallingTreeBlocks().getAllTreeBlocks()) {
-                FallingBlock fallingBlock = fallingTreeBlock.getBlock();
-                if (fallingBlock.isDead() || fallingBlock.isOnGround()) {
-                    groundedBlocks.add(fallingTreeBlock);
-                }
-            }
-
-            for (TreeBlock<FallingBlock> fallingBlock : groundedBlocks) {
-                runFallingBlockImpact(treeAnimation, fallingBlock);
-                fallingBlock.getBlock().remove();
-                treeAnimation.getFallingTreeBlocks().remove(fallingBlock);
-            }
-        }
-    }
-
-    @Override
     public void runAnimation(@NotNull DetectedTree detectedTree, @NotNull Player player) {
-        String configuredType = this.config != null ? this.config.getTreeAnimationType() : "FANCY";
-        TreeAnimationType animationType = TreeAnimationType.fromString(configuredType);
-
-        for (TreeAnimationType type : TreeAnimationType.values()) {
-            String permission = "ultimatetimber.animation." + type.name().toLowerCase();
-            if (player.hasPermission(permission)) {
-                animationType = type;
-                break;
-            }
-        }
+        TreeAnimationType animationType = this.resolveAnimationType(player);
 
         TreeAnimation animation = switch (animationType) {
-            case FANCY -> new TreeAnimationFancy(detectedTree, player);
-            case DISINTEGRATE -> new TreeAnimationDisintegrate(detectedTree, player);
-            case CRUMBLE -> new TreeAnimationCrumble(detectedTree, player);
-            case NONE -> new TreeAnimationNone(detectedTree, player);
+            case FANCY -> new TreeAnimationFancy(detectedTree, player, this.config);
+            case DISINTEGRATE -> new TreeAnimationDisintegrate(detectedTree, player, this.config);
+            case CRUMBLE -> new TreeAnimationCrumble(detectedTree, player, this.config);
+            case NONE -> new TreeAnimationNone(detectedTree, player, this.config);
         };
 
         registerTreeAnimation(animation);
+    }
+
+    private TreeAnimationType resolveAnimationType(Player player) {
+        String configuredType = this.config != null ? this.config.getTreeAnimationType() : "FANCY";
+        TreeAnimationType configuredAnimation = TreeAnimationType.fromString(configuredType);
+        TreeAnimationType permittedAnimation = null;
+
+        for (TreeAnimationType type : TreeAnimationType.values()) {
+            String permission = "ultimatetimber.animation." + type.name().toLowerCase();
+            if (!player.hasPermission(permission)) {
+                continue;
+            }
+
+            if (permittedAnimation != null) {
+                return configuredAnimation;
+            }
+
+            permittedAnimation = type;
+        }
+
+        return permittedAnimation != null ? permittedAnimation : configuredAnimation;
     }
 
     private void registerTreeAnimation(TreeAnimation treeAnimation) {
@@ -124,8 +115,8 @@ public class TreeAnimationManagerImpl implements TreeAnimationManager, ReloadHoo
     @Override
     public boolean isBlockInAnimation(@NotNull Block block) {
         for (TreeAnimation treeAnimation : this.activeAnimations) {
-            for (TreeBlock<Block> treeBlock : treeAnimation.getDetectedTree().getDetectedTreeBlocks().getAllTreeBlocks()) {
-                if (treeBlock.getBlock().equals(block)) {
+            for (TreeBlock<Block> treeBlock : treeAnimation.getDetectedTree().detectedTreeBlocks().getAllTreeBlocks()) {
+                if (treeBlock.block().equals(block)) {
                     return true;
                 }
             }
@@ -136,9 +127,11 @@ public class TreeAnimationManagerImpl implements TreeAnimationManager, ReloadHoo
     @Override
     public boolean isBlockInAnimation(@NotNull FallingBlock fallingBlock) {
         for (TreeAnimation treeAnimation : this.activeAnimations) {
-            for (TreeBlock<FallingBlock> treeBlock : treeAnimation.getFallingTreeBlocks().getAllTreeBlocks()) {
-                if (treeBlock.getBlock().equals(fallingBlock)) {
-                    return true;
+            synchronized (treeAnimation.getFallingTreeBlocks()) {
+                for (TreeBlock<FallingBlock> treeBlock : treeAnimation.getFallingTreeBlocks().getAllTreeBlocks()) {
+                    if (treeBlock.block().equals(fallingBlock)) {
+                        return true;
+                    }
                 }
             }
         }
@@ -147,9 +140,11 @@ public class TreeAnimationManagerImpl implements TreeAnimationManager, ReloadHoo
 
     public TreeAnimation getAnimationForBlock(@NotNull FallingBlock fallingBlock) {
         for (TreeAnimation treeAnimation : this.activeAnimations) {
-            for (TreeBlock<FallingBlock> treeBlock : treeAnimation.getFallingTreeBlocks().getAllTreeBlocks()) {
-                if (treeBlock.getBlock().equals(fallingBlock)) {
-                    return treeAnimation;
+            synchronized (treeAnimation.getFallingTreeBlocks()) {
+                for (TreeBlock<FallingBlock> treeBlock : treeAnimation.getFallingTreeBlocks().getAllTreeBlocks()) {
+                    if (treeBlock.block().equals(fallingBlock)) {
+                        return treeAnimation;
+                    }
                 }
             }
         }
@@ -160,7 +155,7 @@ public class TreeAnimationManagerImpl implements TreeAnimationManager, ReloadHoo
     public void runFallingBlockImpact(@NotNull TreeAnimation treeAnimation, @NotNull TreeBlock<FallingBlock> treeBlock) {
         boolean useCustomSound = this.config == null || this.config.isUseCustomSounds();
         boolean useCustomParticles = this.config == null || this.config.isUseCustomParticles();
-        TreeDefinition treeDefinition = treeAnimation.getDetectedTree().getTreeDefinition();
+        TreeDefinition treeDefinition = treeAnimation.getDetectedTree().treeDefinition();
 
         if (useCustomParticles) {
             ParticleUtils.playLandingParticles(treeBlock);
@@ -170,12 +165,8 @@ public class TreeAnimationManagerImpl implements TreeAnimationManager, ReloadHoo
         }
 
         Location impactLocation = treeBlock.getLocation().clone().subtract(0.0, 1.0, 0.0);
-        Block blockBelow = impactLocation.getBlock();
-        if (this.config != null && this.config.getResolvedFragileBlocks().contains(blockBelow.getType())) {
-            if (blockBelow.getWorld() != null) {
-                blockBelow.getWorld().dropItemNaturally(blockBelow.getLocation(), new ItemStack(blockBelow.getType()));
-            }
-            blockBelow.breakNaturally();
+        if (this.config != null && !this.config.getResolvedFragileBlocks().isEmpty()) {
+            SchedulerUtils.runLocationTask(UltimateTimberApi.getPlugin(), impactLocation, () -> this.breakFragileBlock(impactLocation));
         }
 
         if (this.treeDefinitionManager != null) {
@@ -184,6 +175,20 @@ public class TreeAnimationManagerImpl implements TreeAnimationManager, ReloadHoo
         if (this.saplingManager != null) {
             this.saplingManager.replantSaplingWithChance(treeDefinition, treeBlock);
         }
-        treeAnimation.getFallingTreeBlocks().remove(treeBlock);
+        treeAnimation.removeFallingBlock(treeBlock.block());
+    }
+
+    private void breakFragileBlock(@NotNull Location location) {
+        if (this.config == null) {
+            return;
+        }
+
+        Block block = location.getBlock();
+        if (!this.config.getResolvedFragileBlocks().contains(block.getType())) {
+            return;
+        }
+
+        block.getWorld().dropItemNaturally(block.getLocation(), new ItemStack(block.getType()));
+        block.breakNaturally();
     }
 }

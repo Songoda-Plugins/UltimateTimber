@@ -33,7 +33,7 @@ public final class SoundUtils {
     public static void playLandingSound(TreeBlock<?> block) {
         Location location = block.getLocation();
         if (location.getWorld() != null) {
-            if (block.getTreeBlockType() == TreeBlockType.LOG) {
+            if (block.treeBlockType() == TreeBlockType.LOG) {
                 location.getWorld().playSound(location, Sound.BLOCK_WOOD_FALL, 2.0f, 0.1f);
             } else {
                 location.getWorld().playSound(location, Sound.BLOCK_GRASS_BREAK, 0.5f, 0.75f);

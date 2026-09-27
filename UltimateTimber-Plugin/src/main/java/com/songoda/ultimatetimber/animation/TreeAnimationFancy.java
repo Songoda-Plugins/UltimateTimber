@@ -31,7 +31,8 @@ import java.util.Set;
  */
 public class TreeAnimationFancy extends TreeAnimationBase {
 
-    private static final int MAX_ANIMATION_TICKS = 4 * 20;
+    private static final int PRE_FALL_TILT_TICKS = 20;
+    private static final int MAX_ANIMATION_TICKS = PRE_FALL_TILT_TICKS + (4 * 20);
 
     public TreeAnimationFancy(@NotNull DetectedTree detectedTree,
                               @NotNull Player player,
@@ -135,7 +136,11 @@ public class TreeAnimationFancy extends TreeAnimationBase {
     }
 
     private void applyFallingBlockMotion(@NotNull FallingBlock fallingBlock, int age) {
-        if (age == 1) {
+        if (age < PRE_FALL_TILT_TICKS) {
+            return;
+        }
+
+        if (age == PRE_FALL_TILT_TICKS) {
             BlockUtils.toggleGravityFallingBlock(fallingBlock, true);
             fallingBlock.setVelocity(fallingBlock.getVelocity().multiply(1.5));
         }

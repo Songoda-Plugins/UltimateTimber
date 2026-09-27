@@ -1,6 +1,7 @@
 package com.songoda.ultimatetimber.utils;
 
 import com.songoda.ultimatetimber.api.tree.TreeBlock;
+import com.songoda.core.vortexcore.compatibility.ServerVersion;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.block.Block;
@@ -11,6 +12,9 @@ import org.bukkit.entity.FallingBlock;
  * Utility methods for playing tree particle effects.
  */
 public final class ParticleUtils {
+
+    private static final Particle BLOCK_PARTICLE = Particle.valueOf(
+            ServerVersion.isAtLeastVersion("1.20.5") ? "BLOCK" : "BLOCK_CRACK");
 
     private ParticleUtils() {
     }
@@ -28,7 +32,7 @@ public final class ParticleUtils {
 
         Location location = particleLocation(treeBlock);
         if (location.getWorld() != null) {
-            location.getWorld().spawnParticle(Particle.BLOCK, location, 10, 0.2, 0.2, 0.2, blockData);
+            location.getWorld().spawnParticle(BLOCK_PARTICLE, location, 10, 0.2, 0.2, 0.2, blockData);
         }
     }
 
@@ -45,7 +49,7 @@ public final class ParticleUtils {
 
         Location location = particleLocation(treeBlock);
         if (location.getWorld() != null) {
-            location.getWorld().spawnParticle(Particle.BLOCK, location, 15, 0.3, 0.1, 0.3, blockData);
+            location.getWorld().spawnParticle(BLOCK_PARTICLE, location, 15, 0.3, 0.1, 0.3, blockData);
         }
     }
 

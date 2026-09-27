@@ -1,5 +1,7 @@
 package com.songoda.ultimatetimber.listener;
 
+import com.songoda.core.SongodaPlugin;
+import com.songoda.core.vortexcore.compatibility.EnchantmentResolver;
 import com.songoda.core.vortexcore.vinject.annotation.RegisterListener;
 import com.songoda.core.vortexcore.compatibility.folia.SchedulerUtils;
 import com.songoda.ultimatetimber.api.UltimateTimberApi;
@@ -16,8 +18,8 @@ import com.songoda.ultimatetimber.config.TimberConfig;
 import com.songoda.ultimatetimber.manager.TreeFallManagerImpl;
 import net.vortexdevelopment.vinject.annotation.Inject;
 import org.bukkit.Bukkit;
+import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -87,7 +89,7 @@ public class TreeFallListener implements Listener {
                 return;
             }
 
-            SchedulerUtils.runEntityTask(UltimateTimberApi.getPlugin(), player,
+            SchedulerUtils.runEntityTask(SongodaPlugin.getInstance(), player,
                     () -> this.finishFoliaTreeBreak(player, canTopple, alwaysReplant, detectedTree));
         });
     }
@@ -185,7 +187,7 @@ public class TreeFallListener implements Listener {
             return true;
         }
 
-        boolean hasSilkTouch = tool.hasItemMeta() && tool.getItemMeta().hasEnchant(Enchantment.SILK_TOUCH);
+        boolean hasSilkTouch = tool.hasItemMeta() && tool.getItemMeta().hasEnchant(EnchantmentResolver.resolve(NamespacedKey.minecraft("silk_touch")));
         short damage = fallImpl.getToolDamage(detectedTree.detectedTreeBlocks(), hasSilkTouch);
         return !fallImpl.wouldToolBreak(tool, damage);
     }

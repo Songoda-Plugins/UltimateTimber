@@ -1,5 +1,7 @@
 package com.songoda.ultimatetimber.animation;
 
+import com.songoda.core.SongodaPlugin;
+import com.songoda.core.vortexcore.compatibility.EnchantmentResolver;
 import com.songoda.ultimatetimber.api.UltimateTimberApi;
 import com.songoda.ultimatetimber.api.animation.TreeAnimation;
 import com.songoda.ultimatetimber.api.animation.TreeAnimationType;
@@ -15,8 +17,8 @@ import com.songoda.core.vortexcore.compatibility.folia.SchedulerUtils;
 import lombok.AccessLevel;
 import lombok.Getter;
 import org.bukkit.Location;
+import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -57,7 +59,7 @@ public abstract class TreeAnimationBase implements TreeAnimation {
         ItemStack itemInHand = player.getInventory().getItemInMainHand();
         this.hasSilkTouch = !itemInHand.getType().isAir()
                 && itemInHand.hasItemMeta()
-                && itemInHand.getItemMeta().hasEnchant(Enchantment.SILK_TOUCH);
+                && itemInHand.getItemMeta().hasEnchant(EnchantmentResolver.resolve(NamespacedKey.minecraft("silk_touch")));
 
         this.fallingTreeBlocks = new TreeBlockSet<>();
     }
@@ -145,7 +147,7 @@ public abstract class TreeAnimationBase implements TreeAnimation {
         };
 
         this.fallingBlockTasks.put(fallingBlock, task);
-        SchedulerUtils.runEntityTaskTimer(UltimateTimberApi.getPlugin(), fallingBlock, task, delayTicks, 1L);
+        SchedulerUtils.runEntityTaskTimer(SongodaPlugin.getInstance(), fallingBlock, task, delayTicks, 1L);
     }
 
     protected boolean hasFallingBlocks() {

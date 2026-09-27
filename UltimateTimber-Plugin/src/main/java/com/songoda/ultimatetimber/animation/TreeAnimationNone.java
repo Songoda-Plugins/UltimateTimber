@@ -1,5 +1,6 @@
 package com.songoda.ultimatetimber.animation;
 
+import com.songoda.core.SongodaPlugin;
 import com.songoda.ultimatetimber.api.UltimateTimberApi;
 import com.songoda.ultimatetimber.api.animation.TreeAnimationType;
 import com.songoda.ultimatetimber.api.manager.TreeDefinitionManager;
@@ -31,7 +32,7 @@ public class TreeAnimationNone extends TreeAnimationBase {
 
     @Override
     public void playAnimation(@NotNull Runnable whenFinished) {
-        Plugin plugin = UltimateTimberApi.getPlugin();
+        Plugin plugin = SongodaPlugin.getInstance();
         TreeDefinitionManager treeDefinitionManager = UltimateTimberApi.getTreeDefinitionManager();
         TimberConfig config = this.config;
 

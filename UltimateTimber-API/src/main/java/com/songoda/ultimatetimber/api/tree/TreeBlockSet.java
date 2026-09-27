@@ -2,7 +2,6 @@ package com.songoda.ultimatetimber.api.tree;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jspecify.annotations.NonNull;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -104,12 +103,12 @@ public class TreeBlockSet<T> implements Collection<TreeBlock<T>> {
     }
 
     @Override
-    public @NonNull Iterator<TreeBlock<T>> iterator() {
+    public @NotNull Iterator<TreeBlock<T>> iterator() {
         return this.getAllTreeBlocks().iterator();
     }
 
     @Override
-    public Object @NonNull [] toArray() {
+    public Object @NotNull [] toArray() {
         return this.getAllTreeBlocks().toArray();
     }
 
@@ -271,7 +270,7 @@ public class TreeBlockSet<T> implements Collection<TreeBlock<T>> {
     }
 
     @Override
-    public <T> T @NonNull [] toArray(T @NonNull [] a) {
+    public <T> T @NotNull [] toArray(T @NotNull [] a) {
         return this.getAllTreeBlocks().toArray(a);
     }
 }

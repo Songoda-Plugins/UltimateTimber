@@ -3,7 +3,6 @@ package com.songoda.ultimatetimber.api.tree;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jspecify.annotations.NonNull;
 
 /**
  * Represents configured bonus loot drops and/or console commands executed upon tree felling.
@@ -75,7 +74,7 @@ public record TreeLoot(TreeBlockType treeBlockType, ItemStack item, String comma
     }
 
     @Override
-    public @NonNull String toString() {
+    public @NotNull String toString() {
         return "TreeLoot{" +
                 "treeBlockType=" + this.treeBlockType +
                 ", item=" + this.item +

@@ -25,8 +25,6 @@ public final class UltimateTimberApi {
     @Getter
     private static final NamespacedKey CUSTOM_EXE_KEY = new NamespacedKey("ultimatetimber", "custom_axe");
 
-    @Inject @Getter private static Plugin plugin;
-
     @Inject @Getter private static TreeDetectionManager treeDetectionManager;
 
     @Inject @Getter private static TreeFallManager treeFallManager;

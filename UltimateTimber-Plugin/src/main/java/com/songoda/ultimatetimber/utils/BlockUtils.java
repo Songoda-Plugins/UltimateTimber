@@ -1,21 +1,35 @@
 package com.songoda.ultimatetimber.utils;
 
+import com.songoda.core.vortexcore.compatibility.ServerVersion;
 import com.songoda.ultimatetimber.api.tree.TreeBlock;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.FallingBlock;
 import org.bukkit.inventory.ItemStack;
 
+import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Consumer;
 
 /**
  * Utility methods for block manipulation and falling block entity handling.
  */
 public final class BlockUtils {
+
+    private static final Method MODERN_SPAWN_METHOD = findMethod(
+            World.class,
+            "spawn",
+            Location.class,
+            Class.class,
+            Consumer.class
+    );
+    private static final Method MODERN_SET_BLOCK_DATA_METHOD = findMethod(FallingBlock.class, "setBlockData", BlockData.class);
+    private static final Method LEGACY_SPAWN_METHOD = findMethod(World.class, "spawnFallingBlock", Location.class, BlockData.class);
 
     private BlockUtils() {
     }
@@ -59,7 +73,52 @@ public final class BlockUtils {
      * @return The spawned falling block entity
      */
     public static FallingBlock spawnFallingBlock(Location location, BlockData blockData) {
-        return location.getWorld().spawn(location, FallingBlock.class, fallingBlock -> fallingBlock.setBlockData(blockData));
+        if (ServerVersion.isAtLeastVersion("1.20.2")) {
+            return spawnWithConsumer(location.getWorld(), location, blockData);
+        }
+
+        if (LEGACY_SPAWN_METHOD == null) {
+            throw new IllegalStateException("This server does not expose the legacy falling block spawn API.");
+        }
+
+        try {
+            return (FallingBlock) LEGACY_SPAWN_METHOD.invoke(location.getWorld(), location, blockData);
+        } catch (ReflectiveOperationException exception) {
+            throw new IllegalStateException("Could not spawn a falling block on this server version", exception);
+        }
+    }
+
+    private static FallingBlock spawnWithConsumer(World world, Location location, BlockData blockData) {
+        if (MODERN_SPAWN_METHOD == null || MODERN_SET_BLOCK_DATA_METHOD == null) {
+            throw new IllegalStateException("This server does not expose the modern falling block spawn API.");
+        }
+
+        try {
+            return (FallingBlock) MODERN_SPAWN_METHOD.invoke(
+                    world,
+                    location,
+                    FallingBlock.class,
+                    (Consumer<FallingBlock>) fallingBlock -> setBlockData(fallingBlock, blockData)
+            );
+        } catch (ReflectiveOperationException exception) {
+            throw new IllegalStateException("Could not spawn a falling block on this server version", exception);
+        }
+    }
+
+    private static void setBlockData(FallingBlock fallingBlock, BlockData blockData) {
+        try {
+            MODERN_SET_BLOCK_DATA_METHOD.invoke(fallingBlock, blockData);
+        } catch (ReflectiveOperationException exception) {
+            throw new IllegalStateException("Could not set falling block data on this server version", exception);
+        }
+    }
+
+    private static Method findMethod(Class<?> type, String name, Class<?>... parameterTypes) {
+        try {
+            return type.getMethod(name, parameterTypes);
+        } catch (NoSuchMethodException exception) {
+            return null;
+        }
     }
 
     /**

@@ -1,5 +1,6 @@
 package com.songoda.ultimatetimber.animation;
 
+import com.songoda.core.SongodaPlugin;
 import com.songoda.core.vortexcore.compatibility.folia.SchedulerRunnable;
 import com.songoda.core.vortexcore.compatibility.folia.SchedulerUtils;
 import com.songoda.ultimatetimber.api.UltimateTimberApi;
@@ -42,7 +43,7 @@ public class TreeAnimationFancy extends TreeAnimationBase {
 
     @Override
     public void playAnimation(@NotNull Runnable whenFinished) {
-        Plugin plugin = UltimateTimberApi.getPlugin();
+        Plugin plugin = SongodaPlugin.getInstance();
         TimberConfig config = this.config;
 
         boolean useCustomSound = config == null || config.isUseCustomSounds();

@@ -1,5 +1,6 @@
 package com.songoda.ultimatetimber.manager;
 
+import com.songoda.core.SongodaPlugin;
 import com.songoda.core.vortexcore.hooks.internal.ReloadHook;
 import com.songoda.core.vortexcore.compatibility.folia.SchedulerUtils;
 import com.songoda.core.vortexcore.vinject.annotation.RegisterReloadHook;
@@ -145,7 +146,7 @@ public class TreeDetectionManagerImpl implements TreeDetectionManager, ReloadHoo
         }
 
         if (!SchedulerUtils.isOwnedByCurrentRegion(initialBlock)) {
-            SchedulerUtils.runLocationTask(UltimateTimberApi.getPlugin(), initialBlock.getLocation(),
+            SchedulerUtils.runLocationTask(SongodaPlugin.getInstance(), initialBlock.getLocation(),
                     () -> this.detectTreeAsync(initialBlock, callback));
             return;
         }
@@ -164,7 +165,7 @@ public class TreeDetectionManagerImpl implements TreeDetectionManager, ReloadHoo
 
         Location initialLocation = initialBlock.getLocation().clone();
         new RegionAwareTreeDetector(
-                UltimateTimberApi.getPlugin(),
+                SongodaPlugin.getInstance(),
                 initialBlock,
                 initialLocation,
                 initialMaterial,

@@ -1,5 +1,6 @@
 package com.songoda.ultimatetimber.manager;
 
+import com.songoda.core.SongodaPlugin;
 import com.songoda.core.vortexcore.hooks.internal.ReloadHook;
 import com.songoda.core.vortexcore.text.MiniMessagePlaceholder;
 import com.songoda.core.vortexcore.compatibility.folia.SchedulerUtils;
@@ -250,7 +251,7 @@ public class TreeDefinitionManagerImpl implements TreeDefinitionManager, ReloadH
                              boolean isForEntireTree) {
         Location blockLocation = treeBlock.getLocation().clone();
         if (!SchedulerUtils.isOwnedByCurrentRegion(blockLocation)) {
-            SchedulerUtils.runLocationTask(UltimateTimberApi.getPlugin(), blockLocation,
+            SchedulerUtils.runLocationTask(SongodaPlugin.getInstance(), blockLocation,
                     () -> this.dropTreeLoot(treeDefinition, treeBlock, player, hasSilkTouch, isForEntireTree));
             return;
         }
@@ -262,7 +263,7 @@ public class TreeDefinitionManagerImpl implements TreeDefinitionManager, ReloadH
         }
 
         double multiplier = (this.config != null) ? this.config.getBonusLootMultiplier() : 2.0;
-        SchedulerUtils.runEntityTask(UltimateTimberApi.getPlugin(), player, () -> this.completeLootDrop(
+        SchedulerUtils.runEntityTask(SongodaPlugin.getInstance(), player, () -> this.completeLootDrop(
                 treeDefinition,
                 player,
                 blockLocation,
@@ -322,13 +323,13 @@ public class TreeDefinitionManagerImpl implements TreeDefinitionManager, ReloadH
         String playerName = player.getName();
         for (String command : lootedCommands) {
             String processed = resolveLootCommand(command, playerName, treeDefinition, blockLocation);
-            SchedulerUtils.runTask(UltimateTimberApi.getPlugin(),
+            SchedulerUtils.runTask(SongodaPlugin.getInstance(),
                     () -> Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), processed));
         }
     }
 
     private void dropItemsAtBlock(@NotNull Location blockLocation, @NotNull List<ItemStack> items) {
-        SchedulerUtils.runLocationTask(UltimateTimberApi.getPlugin(), blockLocation, () -> {
+        SchedulerUtils.runLocationTask(SongodaPlugin.getInstance(), blockLocation, () -> {
             Location dropLocation = blockLocation.clone().add(0.5, 0.5, 0.5);
             if (dropLocation.getWorld() == null) {
                 return;

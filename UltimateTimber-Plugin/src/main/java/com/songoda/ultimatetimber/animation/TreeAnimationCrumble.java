@@ -1,5 +1,6 @@
 package com.songoda.ultimatetimber.animation;
 
+import com.songoda.core.SongodaPlugin;
 import com.songoda.ultimatetimber.api.UltimateTimberApi;
 import com.songoda.ultimatetimber.api.animation.TreeAnimationType;
 import com.songoda.ultimatetimber.api.tree.DetectedTree;
@@ -40,7 +41,7 @@ public class TreeAnimationCrumble extends TreeAnimationBase {
 
     @Override
     public void playAnimation(@NotNull Runnable whenFinished) {
-        Plugin plugin = UltimateTimberApi.getPlugin();
+        Plugin plugin = SongodaPlugin.getInstance();
         TimberConfig config = this.config;
 
         boolean useCustomSound = config == null || config.isUseCustomSounds();
@@ -126,7 +127,7 @@ public class TreeAnimationCrumble extends TreeAnimationBase {
 
             this.batchInProgress.set(true);
             RegionBatchProcessor.processByRegion(
-                    UltimateTimberApi.getPlugin(),
+                    SongodaPlugin.getInstance(),
                     batch,
                     TreeBlock::getLocation,
                     this::animateBlock,

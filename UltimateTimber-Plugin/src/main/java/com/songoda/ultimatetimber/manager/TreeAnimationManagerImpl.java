@@ -1,5 +1,6 @@
 package com.songoda.ultimatetimber.manager;
 
+import com.songoda.core.SongodaPlugin;
 import com.songoda.core.vortexcore.hooks.internal.ReloadHook;
 import com.songoda.core.vortexcore.compatibility.folia.SchedulerUtils;
 import com.songoda.core.vortexcore.vinject.annotation.RegisterReloadHook;
@@ -151,6 +152,30 @@ public class TreeAnimationManagerImpl implements TreeAnimationManager, ReloadHoo
         return null;
     }
 
+    public boolean runFallingBlockImpact(@NotNull FallingBlock fallingBlock) {
+        TreeAnimation treeAnimation = this.getAnimationForBlock(fallingBlock);
+        if (treeAnimation == null) {
+            return false;
+        }
+
+        TreeBlock<FallingBlock> treeBlock = null;
+        synchronized (treeAnimation.getFallingTreeBlocks()) {
+            for (TreeBlock<FallingBlock> candidate : treeAnimation.getFallingTreeBlocks().getAllTreeBlocks()) {
+                if (candidate.block().equals(fallingBlock)) {
+                    treeBlock = candidate;
+                    break;
+                }
+            }
+        }
+
+        if (treeBlock == null) {
+            return false;
+        }
+
+        this.runFallingBlockImpact(treeAnimation, treeBlock);
+        return true;
+    }
+
     @Override
     public void runFallingBlockImpact(@NotNull TreeAnimation treeAnimation, @NotNull TreeBlock<FallingBlock> treeBlock) {
         boolean useCustomSound = this.config == null || this.config.isUseCustomSounds();
@@ -166,7 +191,7 @@ public class TreeAnimationManagerImpl implements TreeAnimationManager, ReloadHoo
 
         Location impactLocation = treeBlock.getLocation().clone().subtract(0.0, 1.0, 0.0);
         if (this.config != null && !this.config.getResolvedFragileBlocks().isEmpty()) {
-            SchedulerUtils.runLocationTask(UltimateTimberApi.getPlugin(), impactLocation, () -> this.breakFragileBlock(impactLocation));
+            SchedulerUtils.runLocationTask(SongodaPlugin.getInstance(), impactLocation, () -> this.breakFragileBlock(impactLocation));
         }
 
         if (this.treeDefinitionManager != null) {

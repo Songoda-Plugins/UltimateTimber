@@ -1,5 +1,6 @@
 package com.songoda.ultimatetimber.animation;
 
+import com.songoda.core.SongodaPlugin;
 import com.songoda.ultimatetimber.api.UltimateTimberApi;
 import com.songoda.ultimatetimber.api.animation.TreeAnimationType;
 import com.songoda.ultimatetimber.api.manager.TreeDefinitionManager;
@@ -39,7 +40,7 @@ public class TreeAnimationDisintegrate extends TreeAnimationBase {
 
     @Override
     public void playAnimation(@NotNull Runnable whenFinished) {
-        Plugin plugin = UltimateTimberApi.getPlugin();
+        Plugin plugin = SongodaPlugin.getInstance();
         TreeDefinitionManager treeDefinitionManager = UltimateTimberApi.getTreeDefinitionManager();
 
         boolean useCustomSounds = this.config == null || this.config.isUseCustomSounds();
@@ -145,7 +146,7 @@ public class TreeAnimationDisintegrate extends TreeAnimationBase {
                                   @NotNull Consumer<TreeBlock<Block>> action) {
             this.batchInProgress.set(true);
             RegionBatchProcessor.processByRegion(
-                    UltimateTimberApi.getPlugin(),
+                    SongodaPlugin.getInstance(),
                     treeBlocks,
                     TreeBlock::getLocation,
                     action,

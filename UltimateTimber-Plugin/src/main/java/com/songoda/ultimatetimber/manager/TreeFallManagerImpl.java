@@ -1,5 +1,6 @@
 package com.songoda.ultimatetimber.manager;
 
+import com.songoda.core.vortexcore.compatibility.EnchantmentResolver;
 import com.songoda.core.vortexcore.hooks.internal.ReloadHook;
 import com.songoda.core.vortexcore.vinject.annotation.RegisterReloadHook;
 import com.songoda.ultimatetimber.api.event.TreeFellEvent;
@@ -19,8 +20,8 @@ import net.vortexdevelopment.vinject.annotation.lifecycle.PostConstruct;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
@@ -117,7 +118,7 @@ public class TreeFallManagerImpl implements TreeFallManager, ReloadHook {
 
         boolean hasSilkTouch = tool != null && !tool.getType().isAir()
                 && tool.hasItemMeta()
-                && tool.getItemMeta().hasEnchant(Enchantment.SILK_TOUCH);
+                && tool.getItemMeta().hasEnchant(EnchantmentResolver.resolve(NamespacedKey.minecraft("silk_touch")));
 
         short toolDamage = getToolDamage(detectedTree.detectedTreeBlocks(), hasSilkTouch);
 
@@ -139,7 +140,7 @@ public class TreeFallManagerImpl implements TreeFallManager, ReloadHook {
     private void applyToolDamage(Player player, ItemStack tool, short toolDamage) {
         ItemMeta meta = tool.getItemMeta();
         if (meta instanceof Damageable damageable) {
-            int unbreakingLevel = tool.getEnchantmentLevel(Enchantment.UNBREAKING);
+            int unbreakingLevel = tool.getEnchantmentLevel(EnchantmentResolver.resolve(NamespacedKey.minecraft("unbreaking")));
             int damageToApply = 0;
             for (int i = 0; i < toolDamage; i++) {
                 if (unbreakingLevel <= 0 || this.random.nextInt(unbreakingLevel + 1) == 0) {

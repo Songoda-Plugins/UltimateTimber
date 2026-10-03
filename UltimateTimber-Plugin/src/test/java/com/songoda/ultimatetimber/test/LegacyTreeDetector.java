@@ -34,6 +34,7 @@ public final class LegacyTreeDetector {
     private final int leavesRequiredForTree;
     private final boolean onlyDetectLogsUpwards;
     private final boolean destroyLeaves;
+
     public LegacyTreeDetector(TreeDefinitionManager definitionManager, PlacedBlockManager placedBlockManager, int leavesRequiredForTree, boolean onlyDetectLogsUpwards, boolean destroyLeaves) {
         this.definitionManager = definitionManager;
         this.placedBlockManager = placedBlockManager;

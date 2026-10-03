@@ -6,6 +6,7 @@ Command:
     Header: "<prefix> <gold>Available Commands:"
     Toggle: "  <yellow>/ut toggle <dark_gray>- <gray>Toggle chopping mode"
     Give: "  <yellow>/ut give <player> <dark_gray>- <gray>Give the required axe"
+    Leaderboard: "  <yellow>/ut leaderboard spawn <type> <dark_gray>- <gray>Spawn a stats hologram (one per type)"
     Reload: "  <yellow>/ut reload <dark_gray>- <gray>Reload configuration and locale"
   Toggle:
     Enabled: "<prefix> <gray>Chopping mode: <green>Enabled"
@@ -15,6 +16,13 @@ Command:
     No Axe: "<prefix> <red>Could not load the required axe item."
   Reload:
     Reloaded: "<prefix> <green>Configuration and locale files have been reloaded."
+  Leaderboard:
+    Spawned: "<prefix> <gray>Spawned the <green><type><gray> leaderboard. Remove it with <yellow>/ut leaderboard remove <type>"
+    Already Exists: "<prefix> <red>A <type> leaderboard is already placed. Remove it first with /ut leaderboard remove <type>."
+    Removed: "<prefix> <gray>Removed the <white><type><gray> leaderboard."
+    Not Found: "<prefix> <red>No leaderboard of that type was found."
+    Invalid Type: "<prefix> <red>Unknown leaderboard type. Use blocks, trees, logs, or leaves."
+    Disabled: "<prefix> <red>Player statistics are disabled in config.yml."
 
 Event:
   On Cooldown: "<prefix> <yellow>You are on cooldown and cannot topple trees right now."

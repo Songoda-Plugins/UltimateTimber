@@ -3,7 +3,6 @@ package com.songoda.ultimatetimber.animation;
 import com.songoda.core.SongodaPlugin;
 import com.songoda.core.vortexcore.compatibility.folia.SchedulerRunnable;
 import com.songoda.core.vortexcore.compatibility.folia.SchedulerUtils;
-import com.songoda.ultimatetimber.api.UltimateTimberApi;
 import com.songoda.ultimatetimber.api.animation.TreeAnimationType;
 import com.songoda.ultimatetimber.api.tree.DetectedTree;
 import com.songoda.ultimatetimber.api.tree.TreeBlock;
@@ -168,7 +167,6 @@ public class TreeAnimationFancy extends TreeAnimationBase {
     private final class FancyAnimationTask extends SchedulerRunnable {
 
         private final Runnable whenFinished;
-        private int timer;
 
         private FancyAnimationTask(@NotNull Runnable whenFinished) {
             this.whenFinished = whenFinished;
@@ -177,12 +175,6 @@ public class TreeAnimationFancy extends TreeAnimationBase {
         @Override
         public void run() {
             if (!TreeAnimationFancy.this.hasFallingBlocks()) {
-                this.finish();
-                return;
-            }
-
-            this.timer++;
-            if (this.timer > MAX_ANIMATION_TICKS) {
                 this.finish();
             }
         }

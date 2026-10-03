@@ -39,7 +39,6 @@ final class RegionAwareTreeDetector {
 
     private final Plugin plugin;
     private final World world;
-    private final Block initialBlock;
     private final Position initialPosition;
     private final int initialY;
     private final int minHeight;
@@ -82,7 +81,6 @@ final class RegionAwareTreeDetector {
                             @NotNull Consumer<DetectedTree> callback) {
         this.plugin = plugin;
         this.world = initialLocation.getWorld();
-        this.initialBlock = initialBlock;
         this.initialPosition = new Position(initialLocation.getBlockX(), initialLocation.getBlockY(), initialLocation.getBlockZ());
         this.initialY = this.initialPosition.y();
         this.minHeight = this.world.getMinHeight();
@@ -108,14 +106,9 @@ final class RegionAwareTreeDetector {
     }
 
     void start() {
-        SchedulerUtils.runLocationTask(this.plugin, this.initialLocation(), () -> {
-            if (!this.initialBlock.getType().isAir()) {
-                this.finish(null);
-                return;
-            }
-
-            this.collectTrunkBlocks();
-        });
+        // The initiating Folia block-break event continues normally while the cross-region scan is scheduled.
+        // Its original log is already captured in the initial sample, so it may be air by the time this runs.
+        SchedulerUtils.runLocationTask(this.plugin, this.initialLocation(), this::collectTrunkBlocks);
     }
 
     private void collectTrunkBlocks() {

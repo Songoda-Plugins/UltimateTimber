@@ -1,0 +1,55 @@
+Types:
+  blocks:
+    Title: "<gold><bold>Top 10 Broken Blocks"
+    Lines:
+      - "<gold>🥇 <white><player> <dark_gray>- <yellow><value>"
+      - "<gray>🥈 <white><player> <dark_gray>- <gold><value>"
+      - "<#cd7f32>🥉 <white><player> <dark_gray>- <gold><value>"
+      - "<gray>4. <white><player> <dark_gray>- <gold><value>"
+      - "<gray>5. <white><player> <dark_gray>- <gold><value>"
+      - "<gray>6. <white><player> <dark_gray>- <gold><value>"
+      - "<gray>7. <white><player> <dark_gray>- <gold><value>"
+      - "<gray>8. <white><player> <dark_gray>- <gold><value>"
+      - "<gray>9. <white><player> <dark_gray>- <gold><value>"
+      - "<gray>10. <white><player> <dark_gray>- <gold><value>"
+  trees:
+    Title: "<gold><bold>Top 10 Trees Felled"
+    Lines:
+      - "<gold>🥇 <white><player> <dark_gray>- <yellow><value>"
+      - "<gray>🥈 <white><player> <dark_gray>- <gold><value>"
+      - "<#cd7f32>🥉 <white><player> <dark_gray>- <gold><value>"
+      - "<gray>4. <white><player> <dark_gray>- <gold><value>"
+      - "<gray>5. <white><player> <dark_gray>- <gold><value>"
+      - "<gray>6. <white><player> <dark_gray>- <gold><value>"
+      - "<gray>7. <white><player> <dark_gray>- <gold><value>"
+      - "<gray>8. <white><player> <dark_gray>- <gold><value>"
+      - "<gray>9. <white><player> <dark_gray>- <gold><value>"
+      - "<gray>10. <white><player> <dark_gray>- <gold><value>"
+  logs:
+    Title: "<gold><bold>Top 10 Logs Chopped"
+    Lines:
+      - "<gold>🥇 <white><player> <dark_gray>- <yellow><value>"
+      - "<gray>🥈 <white><player> <dark_gray>- <gold><value>"
+      - "<#cd7f32>🥉 <white><player> <dark_gray>- <gold><value>"
+      - "<gray>4. <white><player> <dark_gray>- <gold><value>"
+      - "<gray>5. <white><player> <dark_gray>- <gold><value>"
+      - "<gray>6. <white><player> <dark_gray>- <gold><value>"
+      - "<gray>7. <white><player> <dark_gray>- <gold><value>"
+      - "<gray>8. <white><player> <dark_gray>- <gold><value>"
+      - "<gray>9. <white><player> <dark_gray>- <gold><value>"
+      - "<gray>10. <white><player> <dark_gray>- <gold><value>"
+  leaves:
+    Title: "<gold><bold>Top 10 Leaves Chopped"
+    Lines:
+      - "<gold>🥇 <white><player> <dark_gray>- <yellow><value>"
+      - "<gray>🥈 <white><player> <dark_gray>- <gold><value>"
+      - "<#cd7f32>🥉 <white><player> <dark_gray>- <gold><value>"
+      - "<gray>4. <white><player> <dark_gray>- <gold><value>"
+      - "<gray>5. <white><player> <dark_gray>- <gold><value>"
+      - "<gray>6. <white><player> <dark_gray>- <gold><value>"
+      - "<gray>7. <white><player> <dark_gray>- <gold><value>"
+      - "<gray>8. <white><player> <dark_gray>- <gold><value>"
+      - "<gray>9. <white><player> <dark_gray>- <gold><value>"
+      - "<gray>10. <white><player> <dark_gray>- <gold><value>"
+
+Placed: { }

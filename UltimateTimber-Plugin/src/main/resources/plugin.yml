@@ -3,3 +3,5 @@ version: ${project.version}
 main: com.songoda.ultimatetimber.UltimateTimber
 api-version: '1.18'
 folia-supported: true
+author: Songoda
+softdepend: [CoreProtect, PlaceholderAPI, WorldGuard, GriefPrevention, mcMMO, Jobs, AureliumSkills, AuraSkills, EcoSkills, EcoJobs, MMOCore, BetonQuest, UltimateClaims]

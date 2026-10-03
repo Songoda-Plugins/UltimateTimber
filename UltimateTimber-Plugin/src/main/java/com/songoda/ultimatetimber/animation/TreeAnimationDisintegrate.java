@@ -1,6 +1,8 @@
 package com.songoda.ultimatetimber.animation;
 
 import com.songoda.core.SongodaPlugin;
+import com.songoda.core.vortexcore.compatibility.folia.SchedulerRunnable;
+import com.songoda.core.vortexcore.compatibility.folia.SchedulerUtils;
 import com.songoda.ultimatetimber.api.UltimateTimberApi;
 import com.songoda.ultimatetimber.api.animation.TreeAnimationType;
 import com.songoda.ultimatetimber.api.manager.TreeDefinitionManager;
@@ -11,8 +13,6 @@ import com.songoda.ultimatetimber.config.TimberConfig;
 import com.songoda.ultimatetimber.utils.ParticleUtils;
 import com.songoda.ultimatetimber.utils.RegionBatchProcessor;
 import com.songoda.ultimatetimber.utils.SoundUtils;
-import com.songoda.core.vortexcore.compatibility.folia.SchedulerRunnable;
-import com.songoda.core.vortexcore.compatibility.folia.SchedulerUtils;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
@@ -23,9 +23,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 /**
  * Animation where tree blocks disintegrate into particles and drops in place.
@@ -63,6 +63,42 @@ public class TreeAnimationDisintegrate extends TreeAnimationBase {
                 useCustomParticles,
                 whenFinished
         ), 0L, 1L);
+    }
+
+    private boolean disintegrateBlock(@NotNull TreeBlock<Block> treeBlock,
+                                      @NotNull TreeDefinition treeDefinition,
+                                      @Nullable TreeDefinitionManager treeDefinitionManager,
+                                      boolean useCustomSound,
+                                      boolean useCustomParticles) {
+        if (!this.canBreak(treeBlock) || !isExpectedTreeBlock(treeBlock, treeDefinition)) {
+            return false;
+        }
+
+        if (useCustomSound) {
+            SoundUtils.playLandingSound(treeBlock);
+        }
+        if (useCustomParticles) {
+            ParticleUtils.playFallingParticles(treeBlock);
+        }
+        if (treeDefinitionManager != null) {
+            treeDefinitionManager.dropTreeLoot(
+                    treeDefinition,
+                    treeBlock,
+                    this.player,
+                    this.hasSilkTouch,
+                    false,
+                    this.getLootDropLocation()
+            );
+        }
+        this.replaceBlock(treeBlock);
+        return true;
+    }
+
+    private boolean isExpectedTreeBlock(@NotNull TreeBlock<Block> treeBlock, @NotNull TreeDefinition treeDefinition) {
+        return switch (treeBlock.treeBlockType()) {
+            case LOG -> treeDefinition.getLogMaterials().contains(treeBlock.block().getType());
+            case LEAF -> treeDefinition.getLeafMaterials().contains(treeBlock.block().getType());
+        };
     }
 
     private final class DisintegrateAnimationTask extends SchedulerRunnable {
@@ -153,34 +189,5 @@ public class TreeAnimationDisintegrate extends TreeAnimationBase {
                     () -> this.batchInProgress.set(false)
             );
         }
-    }
-
-    private boolean disintegrateBlock(@NotNull TreeBlock<Block> treeBlock,
-                                      @NotNull TreeDefinition treeDefinition,
-                                      @Nullable TreeDefinitionManager treeDefinitionManager,
-                                      boolean useCustomSound,
-                                      boolean useCustomParticles) {
-        if (!isExpectedTreeBlock(treeBlock, treeDefinition)) {
-            return false;
-        }
-
-        if (useCustomSound) {
-            SoundUtils.playLandingSound(treeBlock);
-        }
-        if (useCustomParticles) {
-            ParticleUtils.playFallingParticles(treeBlock);
-        }
-        if (treeDefinitionManager != null) {
-            treeDefinitionManager.dropTreeLoot(treeDefinition, treeBlock, this.player, this.hasSilkTouch, false);
-        }
-        this.replaceBlock(treeBlock);
-        return true;
-    }
-
-    private boolean isExpectedTreeBlock(@NotNull TreeBlock<Block> treeBlock, @NotNull TreeDefinition treeDefinition) {
-        return switch (treeBlock.treeBlockType()) {
-            case LOG -> treeDefinition.getLogMaterials().contains(treeBlock.block().getType());
-            case LEAF -> treeDefinition.getLeafMaterials().contains(treeBlock.block().getType());
-        };
     }
 }

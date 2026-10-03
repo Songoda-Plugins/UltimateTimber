@@ -5,6 +5,7 @@ import com.songoda.core.vortexcore.vinject.annotation.RegisterReloadHook;
 import com.songoda.ultimatetimber.config.entry.GlobalLootConfig;
 import com.songoda.ultimatetimber.config.entry.HooksConfig;
 import com.songoda.ultimatetimber.config.entry.QueuedBlockReplacementConfig;
+import com.songoda.ultimatetimber.config.entry.StatisticsConfig;
 import com.songoda.ultimatetimber.config.entry.TreeConfigEntry;
 import lombok.Getter;
 import lombok.Setter;
@@ -50,6 +51,14 @@ public class TimberConfig {
     @Comment("Apply realistic damage to tools based on the number of logs chopped.")
     @Key("Realistic Tool Damage")
     private boolean realisticToolDamage = true;
+
+    @Comment("Drop loot where each falling block lands; disable to drop all loot at the chopped log.")
+    @Key("Realistic Drops")
+    private boolean realisticDrops = true;
+
+    @Comment("Log tree block removals to CoreProtect when CoreProtect is installed.")
+    @Key("CoreProtect Logging")
+    private boolean coreProtectLogging = false;
 
     @Comment("Protect the tool used to chop down the tree from breaking.")
     @Key("Protect Tool")
@@ -127,7 +136,7 @@ public class TimberConfig {
     @Key("Falling Block Damage")
     private int fallingBlockDamage = 1;
 
-    @Comment("Automatically add chopped tree drops to player inventory.")
+    @Comment("Add drops directly to the player's inventory. This overrides Realistic Drops; overflow drops below the player.")
     @Key("Add Items To Inventory")
     private boolean addItemsToInventory = false;
 
@@ -172,9 +181,13 @@ public class TimberConfig {
     @Key("Queued Block Replacement")
     private QueuedBlockReplacementConfig queuedBlockReplacement = new QueuedBlockReplacementConfig();
 
-    @Comment("Third-party plugin integration hooks (mcMMO, Jobs).")
+    @Comment("Optional progression, ability, and quest plugin integrations.")
     @Key("Hooks")
     private HooksConfig hooks = new HooksConfig();
+
+    @Comment("Player tree-felling statistics and cached PlaceholderAPI leaderboards.")
+    @Key("Statistics")
+    private StatisticsConfig statistics = new StatisticsConfig();
 
     @Comment("Global drop and tool rules applicable to all trees.")
     @Key("Global Loot")
@@ -209,7 +222,7 @@ public class TimberConfig {
 
             Material material = Material.matchMaterial(materialName);
             if (material == null) {
-                SongodaPlugin.getInstance().getLogger().warning("[UltimateTimber] Warning: Invalid material '" + blockName + "' in fragile blocks.");
+                SongodaPlugin.getInstance().getLogger().warning("Invalid material '" + blockName + "' in fragile blocks.");
                 continue;
             }
 

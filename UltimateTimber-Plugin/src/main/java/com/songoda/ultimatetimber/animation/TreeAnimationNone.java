@@ -61,6 +61,10 @@ public class TreeAnimationNone extends TreeAnimationBase {
                               @Nullable TreeDefinitionManager treeDefinitionManager,
                               boolean useCustomSound,
                               boolean useCustomParticles) {
+        if (!this.canBreak(treeBlock)) {
+            return;
+        }
+
         if (useCustomSound && treeBlock == initialLog) {
             SoundUtils.playFallingSound(treeBlock);
         }
@@ -68,7 +72,14 @@ public class TreeAnimationNone extends TreeAnimationBase {
             ParticleUtils.playFallingParticles(treeBlock);
         }
         if (treeDefinitionManager != null) {
-            treeDefinitionManager.dropTreeLoot(this.detectedTree.treeDefinition(), treeBlock, this.player, this.hasSilkTouch, false);
+            treeDefinitionManager.dropTreeLoot(
+                    this.detectedTree.treeDefinition(),
+                    treeBlock,
+                    this.player,
+                    this.hasSilkTouch,
+                    false,
+                    this.getLootDropLocation()
+            );
         }
         this.replaceBlock(treeBlock);
     }

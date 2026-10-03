@@ -21,8 +21,8 @@ public interface TreeDetectionManager {
      *
      * @param initialBlock The starting block of the detection
      * @return The DetectedTree if valid, or null if not recognized as a tree. On Folia, this only
-     *     detects trees contained in the current region; use {@link #detectTreeAsync(Block, Consumer)}
-     *     when a tree may cross region boundaries.
+     * detects trees contained in the current region; use {@link #detectTreeAsync(Block, Consumer)}
+     * when a tree may cross region boundaries.
      */
     @Nullable DetectedTree detectTree(@NotNull Block initialBlock);
 

@@ -81,7 +81,7 @@ public class GlobalLootConfig {
 
             Material material = Material.matchMaterial(materialName);
             if (material == null) {
-                SongodaPlugin.getInstance().getLogger().warning("[UltimateTimber] Warning: Invalid material '" + configuredMaterial + "' in " + settingName + ".");
+                SongodaPlugin.getInstance().getLogger().warning("Invalid material '" + configuredMaterial + "' in " + settingName + ".");
                 continue;
             }
 

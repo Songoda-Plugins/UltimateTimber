@@ -33,7 +33,7 @@ public class LootConfigEntry {
         if (this.material != null && !this.material.trim().isEmpty()) {
             this.resolvedMaterial = Material.matchMaterial(this.material.trim());
             if (this.resolvedMaterial == null) {
-                SongodaPlugin.getInstance().getLogger().warning("[UltimateTimber] Warning: Invalid material '" + this.material + "' in loot entry - skipping material drop.");
+                SongodaPlugin.getInstance().getLogger().warning("Invalid material '" + this.material + "' in loot entry - skipping material drop.");
             }
         }
     }

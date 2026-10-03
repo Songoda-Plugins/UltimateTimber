@@ -2,9 +2,8 @@ package com.songoda.ultimatetimber.listener;
 
 import com.songoda.core.SongodaPlugin;
 import com.songoda.core.vortexcore.compatibility.EnchantmentResolver;
-import com.songoda.core.vortexcore.vinject.annotation.RegisterListener;
 import com.songoda.core.vortexcore.compatibility.folia.SchedulerUtils;
-import com.songoda.ultimatetimber.api.UltimateTimberApi;
+import com.songoda.core.vortexcore.vinject.annotation.RegisterListener;
 import com.songoda.ultimatetimber.api.event.TreeFallEvent;
 import com.songoda.ultimatetimber.api.manager.SaplingManager;
 import com.songoda.ultimatetimber.api.manager.TreeDefinitionManager;
@@ -13,13 +12,14 @@ import com.songoda.ultimatetimber.api.manager.TreeFallManager;
 import com.songoda.ultimatetimber.api.tree.DetectedTree;
 import com.songoda.ultimatetimber.api.tree.TreeBlock;
 import com.songoda.ultimatetimber.api.tree.TreeBlockSet;
-import com.songoda.ultimatetimber.tree.DetectedTreeImpl;
 import com.songoda.ultimatetimber.config.TimberConfig;
 import com.songoda.ultimatetimber.manager.TreeFallManagerImpl;
+import com.songoda.ultimatetimber.tree.DetectedTreeImpl;
 import net.vortexdevelopment.vinject.annotation.Inject;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -58,8 +58,13 @@ public class TreeFallListener implements Listener {
             return;
         }
 
+        if (!SongodaPlugin.getInstance().getHookRegistry().canBreak(player, block.getLocation())) {
+            event.setCancelled(true);
+            return;
+        }
+
         if (SchedulerUtils.isFolia()) {
-            handleFoliaBlockBreak(player, block);
+            handleFoliaBlockBreak(event);
             return;
         }
 
@@ -76,7 +81,9 @@ public class TreeFallListener implements Listener {
         this.treeFallManager.toppleTree(player, detectedTree, tool);
     }
 
-    private void handleFoliaBlockBreak(Player player, Block block) {
+    private void handleFoliaBlockBreak(BlockBreakEvent event) {
+        Player player = event.getPlayer();
+        Block block = event.getBlock();
         ItemStack tool = player.getInventory().getItemInMainHand();
         boolean canTopple = this.treeFallManager.canTopple(player, block, tool);
         boolean alwaysReplant = this.config != null && this.config.isAlwaysReplantSapling();
@@ -84,20 +91,39 @@ public class TreeFallListener implements Listener {
             return;
         }
 
-        this.treeDetectionManager.detectTreeAsync(block, detectedTree -> {
-            if (detectedTree == null) {
+        // Keep the legacy behavior for trees contained in this Folia region: cancel the initiating
+        // break and include that log in the animation. Cross-region scans use the async fallback below.
+        DetectedTree detectedTree = this.treeDetectionManager.detectTree(block);
+        if (detectedTree != null) {
+            if (alwaysReplant) {
+                replantInitialLog(detectedTree);
+            }
+            if (!canTopple) {
                 return;
             }
 
-            SchedulerUtils.runEntityTask(SongodaPlugin.getInstance(), player,
-                    () -> this.finishFoliaTreeBreak(player, canTopple, alwaysReplant, detectedTree));
+            if (!isToolValidForToppling(detectedTree, tool) || !isTreeFallAllowed(player, detectedTree)) {
+                return;
+            }
+
+            event.setCancelled(true);
+            this.treeFallManager.toppleTree(player, detectedTree, tool);
+            return;
+        }
+
+        this.treeDetectionManager.detectTreeAsync(block, asyncDetectedTree -> {
+            if (asyncDetectedTree == null) {
+                return;
+            }
+
+            SchedulerUtils.runEntityTask(SongodaPlugin.getInstance(), player, () -> this.finishFoliaTreeBreak(player, canTopple, alwaysReplant, asyncDetectedTree));
         });
     }
 
     private void finishFoliaTreeBreak(Player player,
-                                     boolean canToppleAtBreak,
-                                     boolean alwaysReplant,
-                                     DetectedTree detectedTree) {
+                                      boolean canToppleAtBreak,
+                                      boolean alwaysReplant,
+                                      DetectedTree detectedTree) {
         if (alwaysReplant) {
             replantInitialLog(detectedTree);
         }
@@ -107,7 +133,7 @@ public class TreeFallListener implements Listener {
 
         ItemStack tool = player.getInventory().getItemInMainHand();
         DetectedTree remainingTree = withoutInitialLog(detectedTree);
-        if (remainingTree == null || !isToolValidForToppling(remainingTree, tool)) {
+        if (!isToolValidForToppling(remainingTree, tool)) {
             return;
         }
 
@@ -187,7 +213,10 @@ public class TreeFallListener implements Listener {
             return true;
         }
 
-        boolean hasSilkTouch = tool.hasItemMeta() && tool.getItemMeta().hasEnchant(EnchantmentResolver.resolve(NamespacedKey.minecraft("silk_touch")));
+        Enchantment silkTouch = EnchantmentResolver.resolve(NamespacedKey.minecraft("silk_touch"));
+        boolean hasSilkTouch = tool.hasItemMeta()
+                && silkTouch != null
+                && tool.getItemMeta().hasEnchant(silkTouch);
         short damage = fallImpl.getToolDamage(detectedTree.detectedTreeBlocks(), hasSilkTouch);
         return !fallImpl.wouldToolBreak(tool, damage);
     }

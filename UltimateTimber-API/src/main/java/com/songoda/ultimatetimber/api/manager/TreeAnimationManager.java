@@ -22,6 +22,20 @@ public interface TreeAnimationManager {
     void runAnimation(@NotNull DetectedTree detectedTree, @NotNull Player player);
 
     /**
+     * Plays the appropriate tree animation and invokes the callback when the animation finishes.
+     *
+     * @param detectedTree The felled tree
+     * @param player The player who felled the tree
+     * @param whenFinished Callback to run after the animation completes
+     */
+    default void runAnimation(@NotNull DetectedTree detectedTree,
+                              @NotNull Player player,
+                              @NotNull Runnable whenFinished) {
+        runAnimation(detectedTree, player);
+        whenFinished.run();
+    }
+
+    /**
      * Checks if a world block is currently part of an active tree animation.
      *
      * @param block The block to test

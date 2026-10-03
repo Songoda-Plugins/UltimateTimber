@@ -1,5 +1,6 @@
 package com.songoda.ultimatetimber.manager;
 
+import com.songoda.core.vortexcore.compatibility.folia.SchedulerUtils;
 import com.songoda.ultimatetimber.UltimateTimber;
 import com.songoda.ultimatetimber.api.manager.SaplingManager;
 import com.songoda.ultimatetimber.api.manager.TreeDefinitionManager;
@@ -7,7 +8,6 @@ import com.songoda.ultimatetimber.api.tree.TreeBlock;
 import com.songoda.ultimatetimber.api.tree.TreeBlockType;
 import com.songoda.ultimatetimber.api.tree.TreeDefinition;
 import com.songoda.ultimatetimber.config.TimberConfig;
-import com.songoda.core.vortexcore.compatibility.folia.SchedulerUtils;
 import net.vortexdevelopment.vinject.annotation.Inject;
 import net.vortexdevelopment.vinject.annotation.component.Component;
 import org.bukkit.Location;

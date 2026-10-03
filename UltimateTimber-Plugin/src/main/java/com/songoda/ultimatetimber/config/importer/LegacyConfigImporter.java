@@ -78,16 +78,16 @@ public final class LegacyConfigImporter {
             } catch (CharacterCodingException e) {
                 String decoded = new String(cleanBytes, LEGACY_CHARSET);
                 Files.writeString(configFile.toPath(), decoded, StandardCharsets.UTF_8);
-                logger.info("[UltimateTimber] Converted config.yml from legacy encoding to clean UTF-8.");
+                logger.info("Converted config.yml from legacy encoding to clean UTF-8.");
                 return;
             }
 
             if (hasBom) {
                 Files.write(configFile.toPath(), cleanBytes);
-                logger.info("[UltimateTimber] Stripped UTF-8 BOM from config.yml.");
+                logger.info("Stripped UTF-8 BOM from config.yml.");
             }
         } catch (IOException e) {
-            logger.log(Level.WARNING, "[UltimateTimber] Could not verify/sanitize configuration file encoding.", e);
+            logger.log(Level.WARNING, "Could not verify/sanitize configuration file encoding.", e);
         }
     }
 
@@ -111,7 +111,7 @@ public final class LegacyConfigImporter {
         try {
             config = readConfiguration(configFile);
         } catch (IOException | InvalidConfigurationException e) {
-            this.logger.log(Level.WARNING, "[UltimateTimber] Unable to read the existing configuration file.", e);
+            this.logger.log(Level.WARNING, "Unable to read the existing configuration file.", e);
             return false;
         }
 
@@ -133,14 +133,14 @@ public final class LegacyConfigImporter {
             return false;
         }
 
-        this.logger.info("[UltimateTimber] Detected legacy configuration format. Starting migration...");
+        this.logger.info("Detected legacy configuration format. Starting migration...");
 
         File backupFile = resolveBackupFile();
         try {
             Files.copy(configFile.toPath(), backupFile.toPath());
-            this.logger.info("[UltimateTimber] Backed up legacy configuration to " + backupFile.getName());
+            this.logger.info("Backed up legacy configuration to " + backupFile.getName());
         } catch (IOException e) {
-            this.logger.log(Level.SEVERE, "[UltimateTimber] Failed to back up legacy configuration file!", e);
+            this.logger.log(Level.SEVERE, "Failed to back up legacy configuration file!", e);
             return false;
         }
 
@@ -148,7 +148,7 @@ public final class LegacyConfigImporter {
         try {
             legacy = readConfiguration(backupFile);
         } catch (IOException | InvalidConfigurationException e) {
-            this.logger.log(Level.SEVERE, "[UltimateTimber] Failed to read the backed up legacy configuration file!", e);
+            this.logger.log(Level.SEVERE, "Failed to read the backed up legacy configuration file!", e);
             return false;
         }
 
@@ -169,6 +169,7 @@ public final class LegacyConfigImporter {
         modern.set("Leaves Required For Tree", legacy.getInt("leaves-required-for-tree", 5));
         modern.set("Destroy Leaves", legacy.getBoolean("destroy-leaves", true));
         modern.set("Realistic Tool Damage", legacy.getBoolean("realistic-tool-damage", true));
+        modern.set("Realistic Drops", legacy.getBoolean("realistic-drops", true));
         modern.set("Protect Tool", legacy.getBoolean("protect-tool", false));
         modern.set("Apply Silk Touch", legacy.getBoolean("apply-silk-touch", true));
         modern.set("Apply Silk Touch Tool Damage", legacy.getBoolean("apply-silk-touch-tool-damage", true));
@@ -262,7 +263,7 @@ public final class LegacyConfigImporter {
         try {
             YamlConfig.load(migrated);
         } catch (RuntimeException e) {
-            this.logger.log(Level.SEVERE, "[UltimateTimber] Migrated configuration failed validation and was not written. "
+            this.logger.log(Level.SEVERE, "Migrated configuration failed validation and was not written. "
                     + "The legacy configuration file was left untouched.", e);
             return false;
         }
@@ -303,10 +304,10 @@ public final class LegacyConfigImporter {
             } catch (IOException atomicMoveFailure) {
                 Files.move(temporary, target, StandardCopyOption.REPLACE_EXISTING);
             }
-            this.logger.info("[UltimateTimber] Successfully migrated legacy configuration to modern YAML structure.");
+            this.logger.info("Successfully migrated legacy configuration to modern YAML structure.");
             return true;
         } catch (IOException e) {
-            this.logger.log(Level.SEVERE, "[UltimateTimber] Failed to save modern configuration file after migration!", e);
+            this.logger.log(Level.SEVERE, "Failed to save modern configuration file after migration!", e);
             try {
                 Files.deleteIfExists(temporary);
             } catch (IOException ignored) {

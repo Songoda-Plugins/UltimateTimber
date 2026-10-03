@@ -6,7 +6,7 @@
 
     <groupId>com.songoda</groupId>
     <artifactId>UltimateTimber</artifactId>
-    <version>5.0.0-SNAPSHOT</version>
+    <version>5.0.0</version>
     <packaging>pom</packaging>
 
     <name>UltimateTimber</name>
@@ -25,6 +25,7 @@
         <vinject.version>2.0.0-SNAPSHOT</vinject.version>
         <maven.yaml.transformer.version>1.0.1</maven.yaml.transformer.version>
         <bukkit.api.version>1.21.11-R0.1-SNAPSHOT</bukkit.api.version>
+        <placeholderapi.version>2.11.7</placeholderapi.version>
     </properties>
 
     <repositories>
@@ -42,6 +43,25 @@
         <repository>
             <id>papermc-repo</id>
             <url>https://repo.papermc.io/repository/maven-public/</url>
+        </repository>
+        <repository>
+            <id>auxilor</id>
+            <url>https://repo.auxilor.io/repository/maven-public/</url>
+        </repository>
+        <repository>
+            <id>phoenix</id>
+            <url>https://nexus.phoenixdevt.fr/repository/maven-public/</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>playpro</id>
+            <url>https://maven.playpro.com</url>
+        </repository>
+        <repository>
+            <id>placeholderapi</id>
+            <url>https://repo.extendedclip.com/content/repositories/placeholderapi/</url>
         </repository>
     </repositories>
 

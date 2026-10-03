@@ -1,30 +1,36 @@
 package com.songoda.ultimatetimber.animation;
 
 import com.songoda.core.SongodaPlugin;
+import com.songoda.core.hooks.jobs.JobsHook;
+import com.songoda.core.hooks.mcmmo.McMMOHook;
 import com.songoda.core.vortexcore.compatibility.EnchantmentResolver;
+import com.songoda.core.vortexcore.compatibility.folia.SchedulerRunnable;
+import com.songoda.core.vortexcore.compatibility.folia.SchedulerUtils;
 import com.songoda.ultimatetimber.api.UltimateTimberApi;
 import com.songoda.ultimatetimber.api.animation.TreeAnimation;
 import com.songoda.ultimatetimber.api.animation.TreeAnimationType;
 import com.songoda.ultimatetimber.api.manager.BlockReplacementManager;
 import com.songoda.ultimatetimber.api.tree.DetectedTree;
 import com.songoda.ultimatetimber.api.tree.TreeBlock;
+import com.songoda.ultimatetimber.api.tree.TreeBlockType;
 import com.songoda.ultimatetimber.api.tree.TreeBlockSet;
 import com.songoda.ultimatetimber.config.TimberConfig;
 import com.songoda.ultimatetimber.tree.FallingTreeBlockImpl;
 import com.songoda.ultimatetimber.utils.BlockUtils;
-import com.songoda.core.vortexcore.compatibility.folia.SchedulerRunnable;
-import com.songoda.core.vortexcore.compatibility.folia.SchedulerUtils;
 import lombok.AccessLevel;
 import lombok.Getter;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -41,11 +47,11 @@ public abstract class TreeAnimationBase implements TreeAnimation {
     protected final Player player;
     protected final boolean hasSilkTouch;
     protected final TimberConfig config;
-    protected TreeBlockSet<FallingBlock> fallingTreeBlocks;
     @Getter(AccessLevel.NONE)
     private final Set<FallingBlock> trackedFallingBlocks = ConcurrentHashMap.newKeySet();
     @Getter(AccessLevel.NONE)
     private final Map<FallingBlock, SchedulerRunnable> fallingBlockTasks = new ConcurrentHashMap<>();
+    protected TreeBlockSet<FallingBlock> fallingTreeBlocks;
 
     protected TreeAnimationBase(@NotNull TreeAnimationType treeAnimationType,
                                 @NotNull DetectedTree detectedTree,
@@ -57,9 +63,11 @@ public abstract class TreeAnimationBase implements TreeAnimation {
         this.config = config;
 
         ItemStack itemInHand = player.getInventory().getItemInMainHand();
+        Enchantment silkTouch = EnchantmentResolver.resolve(NamespacedKey.minecraft("silk_touch"));
         this.hasSilkTouch = !itemInHand.getType().isAir()
                 && itemInHand.hasItemMeta()
-                && itemInHand.getItemMeta().hasEnchant(EnchantmentResolver.resolve(NamespacedKey.minecraft("silk_touch")));
+                && silkTouch != null
+                && itemInHand.getItemMeta().hasEnchant(silkTouch);
 
         this.fallingTreeBlocks = new TreeBlockSet<>();
     }
@@ -72,6 +80,16 @@ public abstract class TreeAnimationBase implements TreeAnimation {
     @Override
     public @NotNull TreeBlockSet<FallingBlock> getFallingTreeBlocks() {
         return this.fallingTreeBlocks;
+    }
+
+    @Nullable
+    protected Location getLootDropLocation() {
+        if (this.config == null || this.config.isRealisticDrops()) {
+            return null;
+        }
+
+        TreeBlock<?> initialLog = this.detectedTree.detectedTreeBlocks().getInitialLogBlock();
+        return initialLog != null ? initialLog.getLocation() : null;
     }
 
     @Override
@@ -96,7 +114,8 @@ public abstract class TreeAnimationBase implements TreeAnimation {
     }
 
     protected void trackFallingBlock(@NotNull TreeBlock<FallingBlock> fallingTreeBlock) {
-        this.trackFallingBlock(fallingTreeBlock, 1L, 0L, ignored -> { });
+        this.trackFallingBlock(fallingTreeBlock, 1L, 0L, ignored -> {
+        });
     }
 
     protected void trackFallingBlock(@NotNull TreeBlock<FallingBlock> fallingTreeBlock,
@@ -163,6 +182,10 @@ public abstract class TreeAnimationBase implements TreeAnimation {
      * @return The resulting FallingTreeBlock, or null if air
      */
     protected @Nullable TreeBlock<FallingBlock> convertToFallingBlock(@NotNull TreeBlock<Block> treeBlock) {
+        if (!this.canBreak(treeBlock)) {
+            return null;
+        }
+
         Location location = treeBlock.getLocation().clone().add(0.5, 0.0, 0.5);
         Block block = treeBlock.block();
         if (block.getType().isAir()) {
@@ -184,9 +207,34 @@ public abstract class TreeAnimationBase implements TreeAnimation {
      * @param treeBlock The tree block to replace
      */
     public void replaceBlock(@NotNull TreeBlock<Block> treeBlock) {
+        if (treeBlock.block().getType().isAir()) {
+            return;
+        }
+
+        if (this.config != null && this.config.getHooks() != null) {
+            boolean applyExperience = this.config.getHooks().isApplyExperience();
+            SongodaPlugin.getInstance().getHookRegistry().runIfAvailable(
+                    "mcMMO",
+                    () -> applyExperience,
+                    plugin -> McMMOHook.addWoodcutting(this.player, List.of(treeBlock.block()))
+            );
+
+            if (treeBlock.treeBlockType() == TreeBlockType.LOG && this.player.getGameMode() != GameMode.CREATIVE) {
+                SongodaPlugin.getInstance().getHookRegistry().runIfAvailable(
+                        "Jobs",
+                        () -> applyExperience,
+                        plugin -> JobsHook.breakBlock(this.player, treeBlock.block())
+                );
+            }
+        }
+
         BlockReplacementManager replacementManager = UltimateTimberApi.getBlockReplacementManager();
         if (replacementManager != null) {
-            replacementManager.replaceBlock(treeBlock, this.detectedTree.treeDefinition());
+            replacementManager.replaceBlock(treeBlock, this.detectedTree.treeDefinition(), this.player.getName());
         }
+    }
+
+    protected boolean canBreak(@NotNull TreeBlock<Block> treeBlock) {
+        return SongodaPlugin.getInstance().getHookRegistry().canBreak(this.player, treeBlock.getLocation());
     }
 }

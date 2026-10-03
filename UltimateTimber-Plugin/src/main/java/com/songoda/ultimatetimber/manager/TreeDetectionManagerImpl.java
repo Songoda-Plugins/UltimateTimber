@@ -1,10 +1,9 @@
 package com.songoda.ultimatetimber.manager;
 
 import com.songoda.core.SongodaPlugin;
-import com.songoda.core.vortexcore.hooks.internal.ReloadHook;
 import com.songoda.core.vortexcore.compatibility.folia.SchedulerUtils;
+import com.songoda.core.vortexcore.hooks.internal.ReloadHook;
 import com.songoda.core.vortexcore.vinject.annotation.RegisterReloadHook;
-import com.songoda.ultimatetimber.api.UltimateTimberApi;
 import com.songoda.ultimatetimber.api.manager.PlacedBlockManager;
 import com.songoda.ultimatetimber.api.manager.TreeDefinitionManager;
 import com.songoda.ultimatetimber.api.manager.TreeDetectionManager;
@@ -21,8 +20,8 @@ import com.songoda.ultimatetimber.utils.TreeGeometry;
 import net.vortexdevelopment.vinject.annotation.Inject;
 import net.vortexdevelopment.vinject.annotation.component.Component;
 import net.vortexdevelopment.vinject.annotation.lifecycle.PostConstruct;
-import org.bukkit.Material;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -65,6 +64,17 @@ public class TreeDetectionManagerImpl implements TreeDetectionManager, ReloadHoo
     private volatile boolean destroyLeaves = true;
     private volatile int maxLogsPerChop = 150;
     private volatile int maxLeavesPerTree = 150 * LEAF_LIMIT_RATIO;
+
+    private static Block getRelativeInCurrentRegion(Block block, int offsetX, int offsetY, int offsetZ) {
+        if (SchedulerUtils.isFolia()) {
+            Location targetLocation = block.getLocation().add(offsetX, offsetY, offsetZ);
+            if (!SchedulerUtils.isOwnedByCurrentRegion(targetLocation)) {
+                throw new CrossRegionBlockAccessException();
+            }
+        }
+
+        return block.getRelative(offsetX, offsetY, offsetZ);
+    }
 
     @PostConstruct
     public void initialize() {
@@ -458,17 +468,6 @@ public class TreeDetectionManagerImpl implements TreeDetectionManager, ReloadHoo
         if (SchedulerUtils.isFolia() && !SchedulerUtils.isOwnedByCurrentRegion(block)) {
             throw new CrossRegionBlockAccessException();
         }
-    }
-
-    private static Block getRelativeInCurrentRegion(Block block, int offsetX, int offsetY, int offsetZ) {
-        if (SchedulerUtils.isFolia()) {
-            Location targetLocation = block.getLocation().add(offsetX, offsetY, offsetZ);
-            if (!SchedulerUtils.isOwnedByCurrentRegion(targetLocation)) {
-                throw new CrossRegionBlockAccessException();
-            }
-        }
-
-        return block.getRelative(offsetX, offsetY, offsetZ);
     }
 
     private boolean isLogMaterial(Set<TreeDefinition> treeDefinitions, Material material) {

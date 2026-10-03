@@ -1,11 +1,11 @@
 package com.songoda.ultimatetimber.manager;
 
 import com.songoda.core.SongodaPlugin;
+import com.songoda.core.hooks.mcmmo.McMMOHook;
+import com.songoda.core.vortexcore.compatibility.folia.SchedulerUtils;
 import com.songoda.core.vortexcore.hooks.internal.ReloadHook;
 import com.songoda.core.vortexcore.text.MiniMessagePlaceholder;
-import com.songoda.core.vortexcore.compatibility.folia.SchedulerUtils;
 import com.songoda.core.vortexcore.vinject.annotation.RegisterReloadHook;
-import com.songoda.ultimatetimber.api.UltimateTimberApi;
 import com.songoda.ultimatetimber.api.manager.TreeDefinitionManager;
 import com.songoda.ultimatetimber.api.tree.TreeBlock;
 import com.songoda.ultimatetimber.api.tree.TreeBlockType;
@@ -35,6 +35,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 
@@ -165,15 +166,15 @@ public class TreeDefinitionManagerImpl implements TreeDefinitionManager, ReloadH
 
     @Override
     public synchronized @NotNull Set<TreeDefinition> narrowTreeDefinition(@NotNull Set<TreeDefinition> possibleTreeDefinitions,
-                                                             @NotNull Block block,
-                                                             @NotNull TreeBlockType treeBlockType) {
+                                                                          @NotNull Block block,
+                                                                          @NotNull TreeBlockType treeBlockType) {
         return narrowTreeDefinition(possibleTreeDefinitions, block.getType(), treeBlockType);
     }
 
     @Override
     public synchronized @NotNull Set<TreeDefinition> narrowTreeDefinition(@NotNull Set<TreeDefinition> possibleTreeDefinitions,
-                                                             @Nullable Material material,
-                                                             @NotNull TreeBlockType treeBlockType) {
+                                                                          @Nullable Material material,
+                                                                          @NotNull TreeBlockType treeBlockType) {
         Set<TreeDefinition> matching = new HashSet<>();
         if (material == null) {
             return matching;
@@ -245,17 +246,29 @@ public class TreeDefinitionManagerImpl implements TreeDefinitionManager, ReloadH
 
     @Override
     public synchronized void dropTreeLoot(@NotNull TreeDefinition treeDefinition,
-                             @NotNull TreeBlock<?> treeBlock,
-                             @NotNull Player player,
-                             boolean hasSilkTouch,
-                             boolean isForEntireTree) {
+                                          @NotNull TreeBlock<?> treeBlock,
+                                          @NotNull Player player,
+                                          boolean hasSilkTouch,
+                                          boolean isForEntireTree) {
+        this.dropTreeLoot(treeDefinition, treeBlock, player, hasSilkTouch, isForEntireTree, null);
+    }
+
+    @Override
+    public synchronized void dropTreeLoot(@NotNull TreeDefinition treeDefinition,
+                                          @NotNull TreeBlock<?> treeBlock,
+                                          @NotNull Player player,
+                                          boolean hasSilkTouch,
+                                          boolean isForEntireTree,
+                                          @Nullable Location dropLocation) {
         Location blockLocation = treeBlock.getLocation().clone();
+        Location targetDropLocation = dropLocation != null ? dropLocation.clone() : null;
         if (!SchedulerUtils.isOwnedByCurrentRegion(blockLocation)) {
             SchedulerUtils.runLocationTask(SongodaPlugin.getInstance(), blockLocation,
-                    () -> this.dropTreeLoot(treeDefinition, treeBlock, player, hasSilkTouch, isForEntireTree));
+                    () -> this.dropTreeLoot(treeDefinition, treeBlock, player, hasSilkTouch, isForEntireTree, targetDropLocation));
             return;
         }
 
+        Location lootLocation = targetDropLocation != null ? targetDropLocation : blockLocation;
         LootSelection lootSelection = selectLoot(treeDefinition, treeBlock, hasSilkTouch, isForEntireTree);
         List<ItemStack> originalDrops = new ArrayList<>();
         if (lootSelection.dropOriginalBlock()) {
@@ -266,7 +279,7 @@ public class TreeDefinitionManagerImpl implements TreeDefinitionManager, ReloadH
         SchedulerUtils.runEntityTask(SongodaPlugin.getInstance(), player, () -> this.completeLootDrop(
                 treeDefinition,
                 player,
-                blockLocation,
+                lootLocation,
                 originalDrops,
                 lootSelection.configuredLoot(),
                 multiplier,
@@ -285,6 +298,12 @@ public class TreeDefinitionManagerImpl implements TreeDefinitionManager, ReloadH
         List<ItemStack> lootedItems = new ArrayList<>(originalDrops);
         List<String> lootedCommands = new ArrayList<>();
 
+        for (ItemStack originalDrop : originalDrops) {
+            if (hasMcMMOWoodcuttingDoubleDrops(player)) {
+                lootedItems.add(originalDrop.clone());
+            }
+        }
+
         for (TreeLoot treeLoot : configuredLoot) {
             if (treeLoot == null) {
                 continue;
@@ -296,21 +315,27 @@ public class TreeDefinitionManagerImpl implements TreeDefinitionManager, ReloadH
             }
 
             if (treeLoot.hasItem()) {
+                if (hasMcMMOWoodcuttingDoubleDrops(player)) {
+                    lootedItems.add(treeLoot.item().clone());
+                }
                 lootedItems.add(treeLoot.item().clone());
             }
 
             if (treeLoot.hasCommand()) {
+                if (hasMcMMOWoodcuttingDoubleDrops(player)) {
+                    lootedCommands.add(treeLoot.command());
+                }
                 lootedCommands.add(treeLoot.command());
             }
         }
 
-        if (addToInventory && player.getWorld().equals(blockLocation.getWorld())) {
+        if (addToInventory) {
             List<ItemStack> extraItems = new ArrayList<>();
             for (ItemStack item : lootedItems) {
                 extraItems.addAll(player.getInventory().addItem(item).values());
             }
 
-            Location playerLocation = player.getLocation().clone().subtract(0.5, 0.0, 0.5);
+            Location playerLocation = player.getLocation().clone().subtract(0.0, 0.5, 0.0);
             for (ItemStack extraItem : extraItems) {
                 if (playerLocation.getWorld() != null) {
                     playerLocation.getWorld().dropItemNaturally(playerLocation, extraItem);
@@ -366,6 +391,20 @@ public class TreeDefinitionManagerImpl implements TreeDefinitionManager, ReloadH
                     treeDefinition.shouldDropOriginalLeaf()
             );
         };
+    }
+
+    private boolean hasMcMMOWoodcuttingDoubleDrops(@NotNull Player player) {
+        if (this.config == null || this.config.getHooks() == null) {
+            return false;
+        }
+
+        boolean applyExtraDrops = this.config.getHooks().isApplyExtraDrops();
+        Optional<Boolean> hasDoubleDrops = SongodaPlugin.getInstance().getHookRegistry().checkIfAvailable(
+                "mcMMO",
+                () -> applyExtraDrops,
+                plugin -> McMMOHook.hasWoodcuttingDoubleDrops(player)
+        );
+        return hasDoubleDrops.orElse(false);
     }
 
     private List<TreeLoot> combineLoot(Collection<TreeLoot> treeLoot, Collection<TreeLoot> globalLoot) {

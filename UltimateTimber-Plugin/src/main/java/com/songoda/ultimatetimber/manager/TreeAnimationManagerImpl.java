@@ -1,10 +1,9 @@
 package com.songoda.ultimatetimber.manager;
 
 import com.songoda.core.SongodaPlugin;
-import com.songoda.core.vortexcore.hooks.internal.ReloadHook;
 import com.songoda.core.vortexcore.compatibility.folia.SchedulerUtils;
+import com.songoda.core.vortexcore.hooks.internal.ReloadHook;
 import com.songoda.core.vortexcore.vinject.annotation.RegisterReloadHook;
-import com.songoda.ultimatetimber.api.UltimateTimberApi;
 import com.songoda.ultimatetimber.animation.TreeAnimationCrumble;
 import com.songoda.ultimatetimber.animation.TreeAnimationDisintegrate;
 import com.songoda.ultimatetimber.animation.TreeAnimationFancy;
@@ -48,6 +47,7 @@ public class TreeAnimationManagerImpl implements TreeAnimationManager, ReloadHoo
     private TreeDefinitionManager treeDefinitionManager;
     @Inject
     private SaplingManager saplingManager;
+
     @OnDestroy
     public void onDestroy() {
         this.clearActiveAnimations();
@@ -75,6 +75,14 @@ public class TreeAnimationManagerImpl implements TreeAnimationManager, ReloadHoo
 
     @Override
     public void runAnimation(@NotNull DetectedTree detectedTree, @NotNull Player player) {
+        this.runAnimation(detectedTree, player, () -> {
+        });
+    }
+
+    @Override
+    public void runAnimation(@NotNull DetectedTree detectedTree,
+                             @NotNull Player player,
+                             @NotNull Runnable whenFinished) {
         TreeAnimationType animationType = this.resolveAnimationType(player);
 
         TreeAnimation animation = switch (animationType) {
@@ -84,7 +92,7 @@ public class TreeAnimationManagerImpl implements TreeAnimationManager, ReloadHoo
             case NONE -> new TreeAnimationNone(detectedTree, player, this.config);
         };
 
-        registerTreeAnimation(animation);
+        registerTreeAnimation(animation, whenFinished);
     }
 
     private TreeAnimationType resolveAnimationType(Player player) {
@@ -108,9 +116,12 @@ public class TreeAnimationManagerImpl implements TreeAnimationManager, ReloadHoo
         return permittedAnimation != null ? permittedAnimation : configuredAnimation;
     }
 
-    private void registerTreeAnimation(TreeAnimation treeAnimation) {
+    private void registerTreeAnimation(TreeAnimation treeAnimation, Runnable whenFinished) {
         this.activeAnimations.add(treeAnimation);
-        treeAnimation.playAnimation(() -> this.activeAnimations.remove(treeAnimation));
+        treeAnimation.playAnimation(() -> {
+            this.activeAnimations.remove(treeAnimation);
+            whenFinished.run();
+        });
     }
 
     @Override
@@ -195,7 +206,22 @@ public class TreeAnimationManagerImpl implements TreeAnimationManager, ReloadHoo
         }
 
         if (this.treeDefinitionManager != null) {
-            this.treeDefinitionManager.dropTreeLoot(treeDefinition, treeBlock, treeAnimation.getPlayer(), treeAnimation.hasSilkTouch(), false);
+            Location lootDropLocation = null;
+            if (this.config != null && !this.config.isRealisticDrops()) {
+                TreeBlock<?> initialLog = treeAnimation.getDetectedTree().detectedTreeBlocks().getInitialLogBlock();
+                if (initialLog != null) {
+                    lootDropLocation = initialLog.getLocation();
+                }
+            }
+
+            this.treeDefinitionManager.dropTreeLoot(
+                    treeDefinition,
+                    treeBlock,
+                    treeAnimation.getPlayer(),
+                    treeAnimation.hasSilkTouch(),
+                    false,
+                    lootDropLocation
+            );
         }
         if (this.saplingManager != null) {
             this.saplingManager.replantSaplingWithChance(treeDefinition, treeBlock);

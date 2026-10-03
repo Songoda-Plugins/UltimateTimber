@@ -71,6 +71,7 @@ class LegacyConfigImporterTest {
 
         assertEquals(120, modernConfig.getInt("Max Logs Per Chop"));
         assertEquals(4, modernConfig.getInt("Leaves Required For Tree"));
+        assertTrue(modernConfig.getBoolean("Realistic Drops"));
         assertTrue(modernConfig.getBoolean("Protect Tool"));
         assertEquals("DYNAMIC", modernConfig.getString("Queued Block Replacement.Mode"));
         assertEquals(25, modernConfig.getInt("Queued Block Replacement.Threshold"));

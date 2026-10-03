@@ -114,7 +114,7 @@ public class TreeConfigEntry {
             return material;
         }
 
-        SongodaPlugin.getInstance().getLogger().warning("[UltimateTimber] Warning: Invalid " + materialType + " material '" + configuredMaterial + "' in tree definition.");
+        SongodaPlugin.getInstance().getLogger().warning("Invalid " + materialType + " material '" + configuredMaterial + "' in tree definition.");
         return null;
     }
 

@@ -1,8 +1,8 @@
 package com.songoda.ultimatetimber.manager;
 
-import com.songoda.core.vortexcore.hooks.internal.ReloadHook;
 import com.songoda.core.vortexcore.compatibility.folia.SchedulerTask;
 import com.songoda.core.vortexcore.compatibility.folia.SchedulerUtils;
+import com.songoda.core.vortexcore.hooks.internal.ReloadHook;
 import com.songoda.core.vortexcore.vinject.annotation.RegisterReloadHook;
 import com.songoda.ultimatetimber.UltimateTimber;
 import com.songoda.ultimatetimber.api.manager.BlockReplacementManager;
@@ -10,6 +10,7 @@ import com.songoda.ultimatetimber.api.manager.SaplingManager;
 import com.songoda.ultimatetimber.api.tree.TreeBlock;
 import com.songoda.ultimatetimber.api.tree.TreeDefinition;
 import com.songoda.ultimatetimber.config.TimberConfig;
+import com.songoda.ultimatetimber.integration.CoreProtectIntegration;
 import com.songoda.ultimatetimber.utils.RegionBatchProcessor;
 import net.vortexdevelopment.vinject.annotation.Inject;
 import net.vortexdevelopment.vinject.annotation.component.Component;
@@ -42,6 +43,8 @@ public class BlockReplacementManagerImpl implements BlockReplacementManager, Rel
     @Inject
     private SaplingManager saplingManager;
     @Inject
+    private CoreProtectIntegration coreProtectIntegration;
+    @Inject
     private UltimateTimber plugin;
     private volatile ReplacementMode mode = ReplacementMode.NEVER;
     private volatile int playerThreshold = 20;
@@ -73,10 +76,17 @@ public class BlockReplacementManagerImpl implements BlockReplacementManager, Rel
 
     @Override
     public void replaceBlock(@NotNull TreeBlock<Block> treeBlock, @NotNull TreeDefinition treeDefinition) {
+        this.replaceBlock(treeBlock, treeDefinition, "UltimateTimber");
+    }
+
+    @Override
+    public void replaceBlock(@NotNull TreeBlock<Block> treeBlock,
+                             @NotNull TreeDefinition treeDefinition,
+                             @NotNull String actor) {
         if (isQueuingActive()) {
-            this.queue.add(new QueuedBlockReplacement(treeBlock, treeDefinition));
+            this.queue.add(new QueuedBlockReplacement(treeBlock, treeDefinition, actor));
         } else {
-            executeReplacement(new QueuedBlockReplacement(treeBlock, treeDefinition));
+            executeReplacement(new QueuedBlockReplacement(treeBlock, treeDefinition, actor));
         }
     }
 
@@ -144,7 +154,11 @@ public class BlockReplacementManagerImpl implements BlockReplacementManager, Rel
             return;
         }
 
-        entry.treeBlock.block().setType(Material.AIR);
+        Block block = entry.treeBlock.block();
+        if (this.coreProtectIntegration != null) {
+            this.coreProtectIntegration.logRemoval(entry.actor(), block.getState());
+        }
+        block.setType(Material.AIR);
         if (this.saplingManager != null) {
             this.saplingManager.replantSapling(entry.treeDefinition, entry.treeBlock);
         }
@@ -168,6 +182,6 @@ public class BlockReplacementManagerImpl implements BlockReplacementManager, Rel
         }
     }
 
-    private record QueuedBlockReplacement(TreeBlock<Block> treeBlock, TreeDefinition treeDefinition) {
+    private record QueuedBlockReplacement(TreeBlock<Block> treeBlock, TreeDefinition treeDefinition, String actor) {
     }
 }

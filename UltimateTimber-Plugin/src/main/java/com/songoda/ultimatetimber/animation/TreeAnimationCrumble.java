@@ -1,7 +1,8 @@
 package com.songoda.ultimatetimber.animation;
 
 import com.songoda.core.SongodaPlugin;
-import com.songoda.ultimatetimber.api.UltimateTimberApi;
+import com.songoda.core.vortexcore.compatibility.folia.SchedulerRunnable;
+import com.songoda.core.vortexcore.compatibility.folia.SchedulerUtils;
 import com.songoda.ultimatetimber.api.animation.TreeAnimationType;
 import com.songoda.ultimatetimber.api.tree.DetectedTree;
 import com.songoda.ultimatetimber.api.tree.TreeBlock;
@@ -12,8 +13,6 @@ import com.songoda.ultimatetimber.utils.BlockUtils;
 import com.songoda.ultimatetimber.utils.ParticleUtils;
 import com.songoda.ultimatetimber.utils.RegionBatchProcessor;
 import com.songoda.ultimatetimber.utils.SoundUtils;
-import com.songoda.core.vortexcore.compatibility.folia.SchedulerRunnable;
-import com.songoda.core.vortexcore.compatibility.folia.SchedulerUtils;
 import org.bukkit.block.Block;
 import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.Player;

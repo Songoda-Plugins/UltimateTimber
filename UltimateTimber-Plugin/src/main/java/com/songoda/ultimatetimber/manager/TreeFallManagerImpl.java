@@ -1,5 +1,7 @@
 package com.songoda.ultimatetimber.manager;
 
+import com.songoda.core.SongodaPlugin;
+import com.songoda.core.hooks.mcmmo.McMMOHook;
 import com.songoda.core.vortexcore.compatibility.EnchantmentResolver;
 import com.songoda.core.vortexcore.hooks.internal.ReloadHook;
 import com.songoda.core.vortexcore.vinject.annotation.RegisterReloadHook;
@@ -14,6 +16,7 @@ import com.songoda.ultimatetimber.api.tree.DetectedTree;
 import com.songoda.ultimatetimber.api.tree.TreeBlock;
 import com.songoda.ultimatetimber.api.tree.TreeBlockSet;
 import com.songoda.ultimatetimber.config.TimberConfig;
+import com.songoda.ultimatetimber.integration.CoreProtectIntegration;
 import net.vortexdevelopment.vinject.annotation.Inject;
 import net.vortexdevelopment.vinject.annotation.component.Component;
 import net.vortexdevelopment.vinject.annotation.lifecycle.PostConstruct;
@@ -22,6 +25,7 @@ import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
@@ -29,6 +33,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Optional;
 import java.util.Random;
 
 /**
@@ -49,6 +54,8 @@ public class TreeFallManagerImpl implements TreeFallManager, ReloadHook {
     private ChoppingManager choppingManager;
     @Inject
     private SaplingManager saplingManager;
+    @Inject
+    private CoreProtectIntegration coreProtectIntegration;
     private int maxLogsPerChop = 150;
 
     @PostConstruct
@@ -91,6 +98,18 @@ public class TreeFallManagerImpl implements TreeFallManager, ReloadHook {
             return false;
         }
 
+        if (this.config.getHooks() != null) {
+            boolean requireAbilityActive = this.config.getHooks().isRequireAbilityActive();
+            Optional<Boolean> abilityActive = SongodaPlugin.getInstance().getHookRegistry().checkIfAvailable(
+                    "mcMMO",
+                    () -> requireAbilityActive,
+                    plugin -> McMMOHook.isUsingTreeFeller(player)
+            );
+            if (abilityActive.isPresent() && !abilityActive.get()) {
+                return false;
+            }
+        }
+
         if (this.choppingManager.isInCooldown(player)) {
             return false;
         }
@@ -110,15 +129,20 @@ public class TreeFallManagerImpl implements TreeFallManager, ReloadHook {
 
         if (this.config != null && this.config.isDestroyInitiatedBlock()) {
             TreeBlock<Block> initialLogBlock = detectedTree.detectedTreeBlocks().getInitialLogBlock();
-            if (initialLogBlock != null) {
+            if (initialLogBlock != null && detectedTree.detectedTreeBlocks().contains(initialLogBlock)) {
+                if (this.coreProtectIntegration != null) {
+                    this.coreProtectIntegration.logRemoval(player.getName(), initialLogBlock.block().getState());
+                }
                 initialLogBlock.block().setType(Material.AIR);
                 detectedTree.detectedTreeBlocks().remove(initialLogBlock);
             }
         }
 
+        Enchantment silkTouch = EnchantmentResolver.resolve(NamespacedKey.minecraft("silk_touch"));
         boolean hasSilkTouch = tool != null && !tool.getType().isAir()
                 && tool.hasItemMeta()
-                && tool.getItemMeta().hasEnchant(EnchantmentResolver.resolve(NamespacedKey.minecraft("silk_touch")));
+                && silkTouch != null
+                && tool.getItemMeta().hasEnchant(silkTouch);
 
         short toolDamage = getToolDamage(detectedTree.detectedTreeBlocks(), hasSilkTouch);
 
@@ -126,36 +150,53 @@ public class TreeFallManagerImpl implements TreeFallManager, ReloadHook {
             applyToolDamage(player, tool, toolDamage);
         }
 
-        this.treeAnimationManager.runAnimation(detectedTree, player);
+        this.treeAnimationManager.runAnimation(detectedTree, player, () -> {
+            TreeFellEvent treeFellEvent = new TreeFellEvent(player, detectedTree);
+            Bukkit.getPluginManager().callEvent(treeFellEvent);
+        });
 
         TreeBlock<Block> initialLog = detectedTree.detectedTreeBlocks().getInitialLogBlock();
         if (initialLog != null) {
             this.treeDefinitionManager.dropTreeLoot(detectedTree.treeDefinition(), initialLog, player, false, true);
         }
 
-        TreeFellEvent treeFellEvent = new TreeFellEvent(player, detectedTree);
-        Bukkit.getPluginManager().callEvent(treeFellEvent);
     }
 
     private void applyToolDamage(Player player, ItemStack tool, short toolDamage) {
         ItemMeta meta = tool.getItemMeta();
-        if (meta instanceof Damageable damageable) {
-            int unbreakingLevel = tool.getEnchantmentLevel(EnchantmentResolver.resolve(NamespacedKey.minecraft("unbreaking")));
-            int damageToApply = 0;
-            for (int i = 0; i < toolDamage; i++) {
-                if (unbreakingLevel <= 0 || this.random.nextInt(unbreakingLevel + 1) == 0) {
-                    damageToApply++;
-                }
-            }
+        if (!(meta instanceof Damageable damageable)) {
+            return;
+        }
 
-            int newDamage = damageable.getDamage() + damageToApply;
-            if (newDamage >= tool.getType().getMaxDurability()) {
-                player.getInventory().setItemInMainHand(null);
-            } else {
-                damageable.setDamage(newDamage);
-                tool.setItemMeta(damageable);
+        Enchantment unbreaking = EnchantmentResolver.resolve(NamespacedKey.minecraft("unbreaking"));
+        int unbreakingLevel = unbreaking != null ? tool.getEnchantmentLevel(unbreaking) : 0;
+        int damageToApply = calculateDamageToApply(toolDamage, unbreakingLevel);
+
+        int newDamage = damageable.getDamage() + damageToApply;
+        int maxDamage = damageable.hasMaxDamage() ? damageable.getMaxDamage() : tool.getType().getMaxDurability();
+
+        if (newDamage >= maxDamage) {
+            player.getInventory().setItemInMainHand(null);
+        } else {
+            damageable.setDamage(newDamage);
+            tool.setItemMeta(damageable);
+        }
+    }
+
+    private int calculateDamageToApply(int toolDamage, int unbreakingLevel) {
+        if (unbreakingLevel <= 0) {
+            return toolDamage;
+        }
+
+        int damageToApply = 0;
+
+        for (int i = 0; i < toolDamage; i++) {
+            if (this.random.nextInt(unbreakingLevel + 1) == 0) {
+                damageToApply++;
             }
         }
+
+        return damageToApply;
     }
 
     public boolean wouldToolBreak(ItemStack tool, short toolDamage) {

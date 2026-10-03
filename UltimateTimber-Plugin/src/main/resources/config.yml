@@ -5,6 +5,9 @@ Max Logs Per Chop: 150
 Leaves Required For Tree: 5
 Destroy Leaves: true
 Realistic Tool Damage: true
+# Drop loot where each falling block lands. Disable to drop all loot at the chopped log.
+Realistic Drops: true
+CoreProtect Logging: false
 Protect Tool: false
 Apply Silk Touch: true
 Apply Silk Touch Tool Damage: true
@@ -24,6 +27,7 @@ Falling Blocks Replant Saplings: true
 Falling Blocks Replant Saplings Chance: 1.0
 Falling Blocks Deal Damage: true
 Falling Block Damage: 1
+# Add drops directly to the player's inventory, overriding Realistic Drops. Overflow drops below the player.
 Add Items To Inventory: false
 Use Custom Sounds: true
 Use Custom Particles: true
@@ -48,6 +52,32 @@ Hooks:
   Apply Experience: true
   Apply Extra Drops: true
   Require Ability Active: false
+  AuraSkills:
+    Enabled: false
+    Skill: ""
+    Experience Per Tree: 1.0
+  EcoSkills:
+    Enabled: false
+    Skill: ""
+    Experience Per Tree: 1.0
+  EcoJobs:
+    Enabled: false
+    Job: ""
+    Experience Per Tree: 1.0
+  MMOCore:
+    Class Experience Enabled: false
+    Class Experience Per Tree: 1.0
+    Profession Experience Enabled: false
+    Profession: ""
+    Profession Experience Per Tree: 1.0
+  BetonQuest:
+    Enabled: false
+    Package: ""
+    Action: ""
+
+Statistics:
+  Enabled: true
+  Top Player Refresh: 60
 
 # Loot commands accept these placeholders for global and tree-specific entries:
 # <player>, <type>, <x-pos>, <y-pos>, and <z-pos>.
@@ -97,7 +127,7 @@ Trees:
       - OAK_LEAVES
       - VINE
     Sapling: OAK_SAPLING
-    Plantable Soil: [ ]
+    Plantable Soil: []
     Max Log Distance From Trunk: 6.0
     Max Leaf Distance From Log: 6
     Search For Leaves Diagonally: false
@@ -112,7 +142,7 @@ Trees:
         Material: APPLE
         Chance: 0.5
     Entire Tree Loot: { }
-    Required Tools: [ ]
+    Required Tools: []
     Required Axe: false
 
   spruce:
@@ -125,7 +155,7 @@ Trees:
       - SPRUCE_LEAVES
       - VINE
     Sapling: SPRUCE_SAPLING
-    Plantable Soil: [ ]
+    Plantable Soil: []
     Max Log Distance From Trunk: 2.0
     Max Leaf Distance From Log: 6
     Search For Leaves Diagonally: false
@@ -137,7 +167,7 @@ Trees:
         Material: SPRUCE_SAPLING
         Chance: 5.0
     Entire Tree Loot: { }
-    Required Tools: [ ]
+    Required Tools: []
     Required Axe: false
 
   birch:
@@ -150,7 +180,7 @@ Trees:
       - BIRCH_LEAVES
       - VINE
     Sapling: BIRCH_SAPLING
-    Plantable Soil: [ ]
+    Plantable Soil: []
     Max Log Distance From Trunk: 1.0
     Max Leaf Distance From Log: 4
     Search For Leaves Diagonally: false
@@ -162,7 +192,7 @@ Trees:
         Material: BIRCH_SAPLING
         Chance: 5.0
     Entire Tree Loot: { }
-    Required Tools: [ ]
+    Required Tools: []
     Required Axe: false
 
   jungle:
@@ -175,7 +205,7 @@ Trees:
       - JUNGLE_LEAVES
       - VINE
     Sapling: JUNGLE_SAPLING
-    Plantable Soil: [ ]
+    Plantable Soil: []
     Max Log Distance From Trunk: 6.0
     Max Leaf Distance From Log: 6
     Search For Leaves Diagonally: false
@@ -187,7 +217,7 @@ Trees:
         Material: JUNGLE_SAPLING
         Chance: 2.5
     Entire Tree Loot: { }
-    Required Tools: [ ]
+    Required Tools: []
     Required Axe: false
 
   acacia:
@@ -199,7 +229,7 @@ Trees:
     Leaves:
       - ACACIA_LEAVES
     Sapling: ACACIA_SAPLING
-    Plantable Soil: [ ]
+    Plantable Soil: []
     Max Log Distance From Trunk: 4.0
     Max Leaf Distance From Log: 5
     Search For Leaves Diagonally: false
@@ -211,7 +241,7 @@ Trees:
         Material: ACACIA_SAPLING
         Chance: 5.0
     Entire Tree Loot: { }
-    Required Tools: [ ]
+    Required Tools: []
     Required Axe: false
 
   dark_oak:
@@ -224,7 +254,7 @@ Trees:
       - DARK_OAK_LEAVES
       - VINE
     Sapling: DARK_OAK_SAPLING
-    Plantable Soil: [ ]
+    Plantable Soil: []
     Max Log Distance From Trunk: 4.0
     Max Leaf Distance From Log: 5
     Search For Leaves Diagonally: false
@@ -239,7 +269,7 @@ Trees:
         Material: APPLE
         Chance: 0.5
     Entire Tree Loot: { }
-    Required Tools: [ ]
+    Required Tools: []
     Required Axe: false
 
   azalea:
@@ -253,7 +283,7 @@ Trees:
       - FLOWERING_AZALEA_LEAVES
       - VINE
     Sapling: AZALEA
-    Plantable Soil: [ ]
+    Plantable Soil: []
     Max Log Distance From Trunk: 3.0
     Max Leaf Distance From Log: 4
     Search For Leaves Diagonally: true
@@ -265,7 +295,7 @@ Trees:
         Material: AZALEA
         Chance: 5.0
     Entire Tree Loot: { }
-    Required Tools: [ ]
+    Required Tools: []
     Required Axe: false
 
   cherry:
@@ -277,7 +307,7 @@ Trees:
     Leaves:
       - CHERRY_LEAVES
     Sapling: CHERRY_SAPLING
-    Plantable Soil: [ ]
+    Plantable Soil: []
     Max Log Distance From Trunk: 10.0
     Max Leaf Distance From Log: 6
     Search For Leaves Diagonally: false
@@ -292,7 +322,7 @@ Trees:
         Material: STICK
         Chance: 2.5
     Entire Tree Loot: { }
-    Required Tools: [ ]
+    Required Tools: []
     Required Axe: false
 
   mangrove:
@@ -308,7 +338,7 @@ Trees:
       - MANGROVE_PROPAGULE
       - VINE
     Sapling: MANGROVE_PROPAGULE
-    Plantable Soil: [ ]
+    Plantable Soil: []
     Max Log Distance From Trunk: 30.0
     Max Leaf Distance From Log: 10
     Search For Leaves Diagonally: true
@@ -323,7 +353,7 @@ Trees:
         Material: APPLE
         Chance: 0.5
     Entire Tree Loot: { }
-    Required Tools: [ ]
+    Required Tools: []
     Required Axe: false
 
   pale_oak:
@@ -336,7 +366,7 @@ Trees:
       - PALE_OAK_LEAVES
       - PALE_HANGING_MOSS
     Sapling: PALE_OAK_SAPLING
-    Plantable Soil: [ ]
+    Plantable Soil: []
     Max Log Distance From Trunk: 4.0
     Max Leaf Distance From Log: 5
     Search For Leaves Diagonally: false
@@ -351,5 +381,5 @@ Trees:
         Material: APPLE
         Chance: 0.5
     Entire Tree Loot: { }
-    Required Tools: [ ]
+    Required Tools: []
     Required Axe: false

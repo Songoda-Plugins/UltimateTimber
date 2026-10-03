@@ -4,7 +4,6 @@ import com.songoda.core.SongodaPlugin;
 import com.songoda.core.vortexcore.compatibility.ServerVersion;
 import com.songoda.core.vortexcore.compatibility.folia.SchedulerUtils;
 import com.songoda.core.vortexcore.vinject.annotation.RegisterListener;
-import com.songoda.ultimatetimber.api.UltimateTimberApi;
 import com.songoda.ultimatetimber.api.animation.TreeAnimation;
 import com.songoda.ultimatetimber.api.event.TreeDamageEvent;
 import com.songoda.ultimatetimber.api.manager.TreeAnimationManager;
@@ -37,6 +36,25 @@ public class TreeAnimationListener implements Listener {
 
     @Inject
     private TimberConfig config;
+
+    private static @Nullable Class<? extends Event> resolveEntityRemovalEventType() {
+        String eventClassName = ServerVersion.isAtLeastVersion("1.21.3")
+                ? "org.bukkit.event.entity.EntityRemoveEvent"
+                : "com.destroystokyo.paper.event.entity.EntityRemoveFromWorldEvent";
+        String fallbackEventClassName = ServerVersion.isAtLeastVersion("1.21.3")
+                ? "com.destroystokyo.paper.event.entity.EntityRemoveFromWorldEvent"
+                : "org.bukkit.event.entity.EntityRemoveEvent";
+        Class<? extends Event> removalEventType = loadEventType(eventClassName);
+        return removalEventType != null ? removalEventType : loadEventType(fallbackEventClassName);
+    }
+
+    private static @Nullable Class<? extends Event> loadEventType(String eventClassName) {
+        try {
+            return Class.forName(eventClassName).asSubclass(Event.class);
+        } catch (ClassNotFoundException | ClassCastException exception) {
+            return null;
+        }
+    }
 
     @PostConstruct
     public void registerFallingBlockRemovalHandler() {
@@ -85,25 +103,6 @@ public class TreeAnimationListener implements Listener {
         TreeAnimation treeAnimation = managerImpl.getAnimationForBlock(fallingBlock);
         if (treeAnimation != null) {
             treeAnimation.removeFallingBlock(fallingBlock);
-        }
-    }
-
-    private static @Nullable Class<? extends Event> resolveEntityRemovalEventType() {
-        String eventClassName = ServerVersion.isAtLeastVersion("1.21.3")
-                ? "org.bukkit.event.entity.EntityRemoveEvent"
-                : "com.destroystokyo.paper.event.entity.EntityRemoveFromWorldEvent";
-        String fallbackEventClassName = ServerVersion.isAtLeastVersion("1.21.3")
-                ? "com.destroystokyo.paper.event.entity.EntityRemoveFromWorldEvent"
-                : "org.bukkit.event.entity.EntityRemoveEvent";
-        Class<? extends Event> removalEventType = loadEventType(eventClassName);
-        return removalEventType != null ? removalEventType : loadEventType(fallbackEventClassName);
-    }
-
-    private static @Nullable Class<? extends Event> loadEventType(String eventClassName) {
-        try {
-            return Class.forName(eventClassName).asSubclass(Event.class);
-        } catch (ClassNotFoundException | ClassCastException exception) {
-            return null;
         }
     }
 

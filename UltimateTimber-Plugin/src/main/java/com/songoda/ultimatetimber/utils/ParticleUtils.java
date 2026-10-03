@@ -1,7 +1,7 @@
 package com.songoda.ultimatetimber.utils;
 
-import com.songoda.ultimatetimber.api.tree.TreeBlock;
 import com.songoda.core.vortexcore.compatibility.ServerVersion;
+import com.songoda.ultimatetimber.api.tree.TreeBlock;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.block.Block;

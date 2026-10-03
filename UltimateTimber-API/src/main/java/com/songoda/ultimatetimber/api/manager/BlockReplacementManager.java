@@ -19,6 +19,19 @@ public interface BlockReplacementManager {
     void replaceBlock(@NotNull TreeBlock<Block> treeBlock, @NotNull TreeDefinition treeDefinition);
 
     /**
+     * Replaces a tree block and attributes integrations to the player causing the replacement.
+     *
+     * @param treeBlock      The tree block to replace
+     * @param treeDefinition The associated tree definition
+     * @param actor          The player or plugin responsible for the replacement
+     */
+    default void replaceBlock(@NotNull TreeBlock<Block> treeBlock,
+                              @NotNull TreeDefinition treeDefinition,
+                              @NotNull String actor) {
+        replaceBlock(treeBlock, treeDefinition);
+    }
+
+    /**
      * Immediately processes all remaining queued block replacements.
      */
     void processAll();

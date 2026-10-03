@@ -13,6 +13,7 @@ import com.songoda.core.vortexcore.text.lang.Lang;
 import com.songoda.ultimatetimber.UltimateTimber;
 import com.songoda.ultimatetimber.api.manager.ChoppingManager;
 import com.songoda.ultimatetimber.api.manager.TreeDefinitionManager;
+import com.songoda.ultimatetimber.hologram.LeaderboardHologramService;
 import net.vortexdevelopment.vinject.annotation.Inject;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -37,11 +38,15 @@ public class UltimateTimberCommand {
     @Inject
     private UltimateTimber plugin;
 
+    @Inject
+    private LeaderboardHologramService leaderboardHologramService;
+
     @BaseCommand
     public void baseCommand(@Sender CommandSender sender) {
         Lang.send(sender, "Command.Help.Header");
         Lang.send(sender, "Command.Help.Toggle");
         Lang.send(sender, "Command.Help.Give");
+        Lang.send(sender, "Command.Help.Leaderboard");
         Lang.send(sender, "Command.Help.Reload");
     }
 
@@ -75,6 +80,48 @@ public class UltimateTimberCommand {
                 .map(Player::getName)
                 .filter(name -> name.toLowerCase(Locale.ROOT).startsWith(prefix))
                 .toList();
+    }
+
+    @SubCommand("leaderboard spawn {type}")
+    @Permission("ultimatetimber.leaderboard")
+    public void spawnLeaderboard(@Sender Player player, @Param("type") String type) {
+        if (!this.leaderboardHologramService.isEnabled()) {
+            Lang.send(player, "Command.Leaderboard.Disabled");
+            return;
+        }
+
+        String id = this.leaderboardHologramService.spawn(player, type);
+        if (id == null) {
+            if (this.leaderboardHologramService.getPlacedTypes().contains(type.toLowerCase(Locale.ROOT))) {
+                Lang.send(player, "Command.Leaderboard.Already Exists", new MiniMessagePlaceholder("type", type.toLowerCase(Locale.ROOT)));
+            } else {
+                Lang.send(player, "Command.Leaderboard.Invalid Type");
+            }
+            return;
+        }
+
+        Lang.send(player, "Command.Leaderboard.Spawned",
+                new MiniMessagePlaceholder("type", id),
+                new MiniMessagePlaceholder("id", id));
+    }
+
+    @TabComplete(param = "type")
+    public List<String> completeLeaderboardTypes(@Current String current) {
+        String prefix = current.toLowerCase(Locale.ROOT);
+        return this.leaderboardHologramService.getTypes().stream()
+                .filter(type -> type.startsWith(prefix))
+                .toList();
+    }
+
+    @SubCommand("leaderboard remove {type}")
+    @Permission("ultimatetimber.leaderboard")
+    public void removeLeaderboard(@Sender Player player, @Param("type") String type) {
+        if (!this.leaderboardHologramService.remove(type)) {
+            Lang.send(player, "Command.Leaderboard.Not Found");
+            return;
+        }
+
+        Lang.send(player, "Command.Leaderboard.Removed", new MiniMessagePlaceholder("type", type.toLowerCase(Locale.ROOT)));
     }
 
     @SubCommand("reload")

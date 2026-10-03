@@ -3,6 +3,7 @@ package com.songoda.ultimatetimber.api.manager;
 import com.songoda.ultimatetimber.api.tree.TreeBlock;
 import com.songoda.ultimatetimber.api.tree.TreeBlockType;
 import com.songoda.ultimatetimber.api.tree.TreeDefinition;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -95,6 +96,25 @@ public interface TreeDefinitionManager {
                       @NotNull Player player,
                       boolean hasSilkTouch,
                       boolean isForEntireTree);
+
+    /**
+     * Drops configured loot at an explicit location when provided.
+     *
+     * @param treeDefinition  The tree definition
+     * @param treeBlock       The tree block being dropped
+     * @param player          The player felling the tree
+     * @param hasSilkTouch    Whether silk touch applies
+     * @param isForEntireTree Whether this is the once-per-tree drop
+     * @param dropLocation    Optional location for resulting items and command placeholders
+     */
+    default void dropTreeLoot(@NotNull TreeDefinition treeDefinition,
+                              @NotNull TreeBlock<?> treeBlock,
+                              @NotNull Player player,
+                              boolean hasSilkTouch,
+                              boolean isForEntireTree,
+                              @Nullable Location dropLocation) {
+        this.dropTreeLoot(treeDefinition, treeBlock, player, hasSilkTouch, isForEntireTree);
+    }
 
     /**
      * Gets all valid plantable soil materials for a tree definition (including global soil types).

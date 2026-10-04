@@ -2,6 +2,6 @@
 
 songodaPipeline(
     mavenDeploy: true,
-    songodaDeploy: true,
+    songodaDeploy: false,
     mavenReleaseScope: 'api'
 )

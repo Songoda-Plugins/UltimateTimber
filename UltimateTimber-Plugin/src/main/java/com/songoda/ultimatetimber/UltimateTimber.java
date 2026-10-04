@@ -2,7 +2,6 @@ package com.songoda.ultimatetimber;
 
 import com.songoda.core.SongodaPlugin;
 import com.songoda.ultimatetimber.config.importer.LegacyConfigImporter;
-import com.songoda.ultimatetimber.integration.protection.UltimateClaimsProtectionHook;
 import net.vortexdevelopment.vinject.annotation.component.Root;
 import net.vortexdevelopment.vinject.annotation.template.TemplateDependency;
 import org.jetbrains.annotations.Nullable;
@@ -36,7 +35,6 @@ public final class UltimateTimber extends SongodaPlugin {
     @Override
     public void onPluginLoad() {
         initDatabase();
-        getHookRegistry().registerProtectionHook("UltimateClaims", () -> new UltimateClaimsProtectionHook());
 
         File configFile = new File(getDataFolder(), "config.yml");
         LegacyConfigImporter.sanitizeEncoding(configFile);

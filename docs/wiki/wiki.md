@@ -1,13 +1,13 @@
 ---
 title: "UltimateTimber Wiki"
-description: "Installation, gameplay features, configuration, commands, and the developer API for UltimateTimber."
+description: "Minecraft tree felling, installation, configuration, integrations, player statistics, leaderboards, and the UltimateTimber developer API."
 order: 0
 hidden: false
 ---
 
 # UltimateTimber Wiki
 
-UltimateTimber fells configured trees when a player breaks a log. The tree can topple with one of several animations, use custom drops, and replant saplings. Use the guides below to install it, tune the config, or connect another plugin to its API.
+UltimateTimber is a Minecraft tree-felling plugin for Paper, Spigot, Purpur, and Folia servers. It detects configured trees, runs animated falls, supports custom drops, player statistics, leaderboards, and integrations. Use the guides below to install it, tune the config, or connect another plugin to its API.
 
 ## Find the right guide
 

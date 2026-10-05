@@ -9,6 +9,8 @@ hidden: false
 
 UltimateTimber has optional hooks for protection, block logging, progression rewards, quest actions, and player statistics. Install only the plugins you use. Missing optional plugins do not stop tree felling.
 
+Optional dependencies are loaded at runtime, so missing integration plugins do not prevent startup. This also allows UltimateTimber to run on some modded server distributions, though compatibility depends on the specific server software and installed mods.
+
 <Callout variant="info">
   The integrations listed here are optional. UltimateTimber checks whether each plugin is enabled before calling its hook. Most rewards also need to be enabled in <Text color="#38bdf8"><code>plugins/UltimateTimber/config.yml</code></Text>.
 </Callout>

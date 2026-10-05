@@ -8,7 +8,13 @@ categoryOrder: 1
 
 # Getting started
 
-UltimateTimber works on Paper and declares Folia support. Download the current jar from the [Songoda Reborn plugin page](https://songoda-reborn.com/plugins/ultimatetimber).
+UltimateTimber supports Paper, Spigot, Purpur, and Folia. Download the current jar from the [Songoda Reborn plugin page](https://songoda-reborn.com/plugins/ultimatetimber).
+
+## Server and Minecraft compatibility
+
+UltimateTimber supports Paper, Spigot, Purpur, and Folia. The minimum Minecraft server version is **1.18.2**. Version 5.0.0 adds support for **Minecraft 26.3 and newer**. Check the [version history](https://songoda-reborn.com/plugins/ultimatetimber/versions) for the compatibility listed on each release.
+
+UltimateTimber does not depend on NMS. Its optional integration loading also allows it to run on some modded server distributions; compatibility depends on the server and installed plugins.
 
 ## Install the plugin
 

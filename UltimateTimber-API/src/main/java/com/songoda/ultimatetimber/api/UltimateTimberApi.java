@@ -1,6 +1,6 @@
 package com.songoda.ultimatetimber.api;
 
-import com.songoda.core.vortexcore.vinject.annotation.Api;
+import com.songoda.core.vinject.annotation.Api;
 import com.songoda.ultimatetimber.api.manager.BlockReplacementManager;
 import com.songoda.ultimatetimber.api.manager.ChoppingManager;
 import com.songoda.ultimatetimber.api.manager.PlacedBlockManager;

@@ -1,7 +1,7 @@
 package com.songoda.ultimatetimber.listener;
 
-import com.songoda.core.vortexcore.vinject.annotation.RegisterListener;
-import com.songoda.core.vortexcore.vinject.database.cache.DefaultCacheKeys;
+import com.songoda.core.vinject.annotation.RegisterListener;
+import com.songoda.core.vinject.database.cache.DefaultCacheKeys;
 import com.songoda.ultimatetimber.api.event.TreeFellEvent;
 import com.songoda.ultimatetimber.api.tree.TreeBlock;
 import com.songoda.ultimatetimber.config.TimberConfig;
@@ -22,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 /**
- * Loads online player stats into VortexCore's pinned cache and records completed chops.
+ * Loads online player stats into SongodaCore's pinned cache and records completed chops.
  */
 @RegisterListener
 public final class PlayerTreeStatsListener implements Listener {

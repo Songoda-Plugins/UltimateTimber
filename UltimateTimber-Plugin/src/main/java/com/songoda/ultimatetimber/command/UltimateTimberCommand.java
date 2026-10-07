@@ -1,15 +1,15 @@
 package com.songoda.ultimatetimber.command;
 
-import com.songoda.core.vortexcore.command.annotation.BaseCommand;
-import com.songoda.core.vortexcore.command.annotation.Command;
-import com.songoda.core.vortexcore.command.annotation.Current;
-import com.songoda.core.vortexcore.command.annotation.Param;
-import com.songoda.core.vortexcore.command.annotation.Permission;
-import com.songoda.core.vortexcore.command.annotation.Sender;
-import com.songoda.core.vortexcore.command.annotation.SubCommand;
-import com.songoda.core.vortexcore.command.annotation.TabComplete;
-import com.songoda.core.vortexcore.text.MiniMessagePlaceholder;
-import com.songoda.core.vortexcore.text.lang.Lang;
+import com.songoda.core.command.annotation.BaseCommand;
+import com.songoda.core.command.annotation.Command;
+import com.songoda.core.command.annotation.Current;
+import com.songoda.core.command.annotation.Param;
+import com.songoda.core.command.annotation.Permission;
+import com.songoda.core.command.annotation.Sender;
+import com.songoda.core.command.annotation.SubCommand;
+import com.songoda.core.command.annotation.TabComplete;
+import com.songoda.core.text.MiniMessagePlaceholder;
+import com.songoda.core.text.lang.Lang;
 import com.songoda.ultimatetimber.UltimateTimber;
 import com.songoda.ultimatetimber.api.manager.ChoppingManager;
 import com.songoda.ultimatetimber.api.manager.TreeDefinitionManager;

@@ -1,6 +1,6 @@
 package com.songoda.ultimatetimber.listener;
 
-import com.songoda.core.vortexcore.vinject.annotation.RegisterListener;
+import com.songoda.core.vinject.annotation.RegisterListener;
 import com.songoda.ultimatetimber.api.event.TreeFellEvent;
 import com.songoda.ultimatetimber.api.manager.PlacedBlockManager;
 import com.songoda.ultimatetimber.api.tree.TreeBlock;

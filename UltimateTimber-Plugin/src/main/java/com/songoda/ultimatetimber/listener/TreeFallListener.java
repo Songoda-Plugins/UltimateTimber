@@ -1,9 +1,9 @@
 package com.songoda.ultimatetimber.listener;
 
 import com.songoda.core.SongodaPlugin;
-import com.songoda.core.vortexcore.compatibility.EnchantmentResolver;
-import com.songoda.core.vortexcore.compatibility.folia.SchedulerUtils;
-import com.songoda.core.vortexcore.vinject.annotation.RegisterListener;
+import com.songoda.core.compatibility.EnchantmentResolver;
+import com.songoda.core.compatibility.folia.SchedulerUtils;
+import com.songoda.core.vinject.annotation.RegisterListener;
 import com.songoda.ultimatetimber.api.event.TreeFallEvent;
 import com.songoda.ultimatetimber.api.manager.SaplingManager;
 import com.songoda.ultimatetimber.api.manager.TreeDefinitionManager;
@@ -58,17 +58,12 @@ public class TreeFallListener implements Listener {
             return;
         }
 
-        if (!SongodaPlugin.getInstance().getHookRegistry().canBreak(player, block.getLocation())) {
-            event.setCancelled(true);
-            return;
-        }
-
         if (SchedulerUtils.isFolia()) {
             handleFoliaBlockBreak(event);
             return;
         }
 
-        DetectedTree detectedTree = prepareTreeForToppling(player, block, tool);
+        DetectedTree detectedTree = prepareTreeForToppling(event, player, block, tool);
         if (detectedTree == null || !isToolValidForToppling(detectedTree, tool)) {
             return;
         }
@@ -95,6 +90,11 @@ public class TreeFallListener implements Listener {
         // break and include that log in the animation. Cross-region scans use the async fallback below.
         DetectedTree detectedTree = this.treeDetectionManager.detectTree(block);
         if (detectedTree != null) {
+            if (!SongodaPlugin.getInstance().getHookRegistry().canBreak(player, block.getLocation())) {
+                event.setCancelled(true);
+                return;
+            }
+
             if (alwaysReplant) {
                 replantInitialLog(detectedTree);
             }
@@ -174,7 +174,7 @@ public class TreeFallListener implements Listener {
         return true;
     }
 
-    private DetectedTree prepareTreeForToppling(Player player, Block block, ItemStack tool) {
+    private DetectedTree prepareTreeForToppling(BlockBreakEvent event, Player player, Block block, ItemStack tool) {
         boolean canTopple = this.treeFallManager.canTopple(player, block, tool);
         boolean alwaysReplant = this.config != null && this.config.isAlwaysReplantSapling();
         if (!canTopple && !alwaysReplant) {
@@ -183,6 +183,11 @@ public class TreeFallListener implements Listener {
 
         DetectedTree detectedTree = this.treeDetectionManager.detectTree(block);
         if (detectedTree == null) {
+            return null;
+        }
+
+        if (!SongodaPlugin.getInstance().getHookRegistry().canBreak(player, block.getLocation())) {
+            event.setCancelled(true);
             return null;
         }
 

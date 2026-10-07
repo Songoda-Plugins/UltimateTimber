@@ -1,7 +1,7 @@
 package com.songoda.ultimatetimber.config;
 
 import com.songoda.core.SongodaPlugin;
-import com.songoda.core.vortexcore.vinject.annotation.RegisterReloadHook;
+import com.songoda.core.vinject.annotation.RegisterReloadHook;
 import com.songoda.ultimatetimber.config.entry.GlobalLootConfig;
 import com.songoda.ultimatetimber.config.entry.HooksConfig;
 import com.songoda.ultimatetimber.config.entry.QueuedBlockReplacementConfig;
@@ -12,6 +12,7 @@ import lombok.Setter;
 import net.vortexdevelopment.vinject.annotation.lifecycle.OnLoad;
 import net.vortexdevelopment.vinject.annotation.yaml.Comment;
 import net.vortexdevelopment.vinject.annotation.yaml.Key;
+import net.vortexdevelopment.vinject.annotation.yaml.NewLineBefore;
 import net.vortexdevelopment.vinject.annotation.yaml.YamlConfiguration;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
@@ -169,6 +170,7 @@ public class TimberConfig {
     private boolean scatterTreeBlocksOnGround = false;
 
     @Comment("Blocks that shatter and drop when falling tree blocks hit them.")
+    @NewLineBefore
     @Key("Fragile Blocks")
     private List<String> fragileBlocks = new ArrayList<>(List.of(
             "GLASS",
@@ -178,26 +180,32 @@ public class TimberConfig {
     ));
 
     @Comment("Queued block replacement settings to reduce server lag on large trees.")
+    @NewLineBefore
     @Key("Queued Block Replacement")
     private QueuedBlockReplacementConfig queuedBlockReplacement = new QueuedBlockReplacementConfig();
 
     @Comment("Optional progression, ability, and quest plugin integrations.")
+    @NewLineBefore
     @Key("Hooks")
     private HooksConfig hooks = new HooksConfig();
 
     @Comment("Player tree-felling statistics and cached PlaceholderAPI leaderboards.")
+    @NewLineBefore
     @Key("Statistics")
     private StatisticsConfig statistics = new StatisticsConfig();
 
     @Comment("Global drop and tool rules applicable to all trees.")
+    @NewLineBefore
     @Key("Global Loot")
     private GlobalLootConfig globalLoot = new GlobalLootConfig();
 
     @Comment("Custom required axe item.")
+    @NewLineBefore
     @Key("Required Axe")
     private ItemStack requiredAxe;
 
     @Comment("Individual tree definitions.")
+    @NewLineBefore
     @Key("Trees")
     private Map<String, TreeConfigEntry> trees = new LinkedHashMap<>();
 

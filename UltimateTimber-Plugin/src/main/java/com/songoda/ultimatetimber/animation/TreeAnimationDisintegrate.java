@@ -1,8 +1,8 @@
 package com.songoda.ultimatetimber.animation;
 
 import com.songoda.core.SongodaPlugin;
-import com.songoda.core.vortexcore.compatibility.folia.SchedulerRunnable;
-import com.songoda.core.vortexcore.compatibility.folia.SchedulerUtils;
+import com.songoda.core.compatibility.folia.SchedulerRunnable;
+import com.songoda.core.compatibility.folia.SchedulerUtils;
 import com.songoda.ultimatetimber.api.UltimateTimberApi;
 import com.songoda.ultimatetimber.api.animation.TreeAnimationType;
 import com.songoda.ultimatetimber.api.manager.TreeDefinitionManager;

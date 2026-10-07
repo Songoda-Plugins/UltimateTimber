@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.songoda</groupId>
         <artifactId>UltimateTimber</artifactId>
-        <version>5.0.0</version>
+        <version>5.1.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -22,12 +22,6 @@
             <groupId>com.songoda</groupId>
             <artifactId>SongodaCore</artifactId>
             <version>${songoda.core.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>net.vortexdevelopment</groupId>
-            <artifactId>VortexCore</artifactId>
-            <version>${vortexcore.version}</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

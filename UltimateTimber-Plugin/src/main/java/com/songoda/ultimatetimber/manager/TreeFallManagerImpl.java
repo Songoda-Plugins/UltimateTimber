@@ -2,9 +2,9 @@ package com.songoda.ultimatetimber.manager;
 
 import com.songoda.core.SongodaPlugin;
 import com.songoda.core.hooks.mcmmo.McMMOHook;
-import com.songoda.core.vortexcore.compatibility.EnchantmentResolver;
-import com.songoda.core.vortexcore.hooks.internal.ReloadHook;
-import com.songoda.core.vortexcore.vinject.annotation.RegisterReloadHook;
+import com.songoda.core.compatibility.EnchantmentResolver;
+import com.songoda.core.hooks.internal.ReloadHook;
+import com.songoda.core.vinject.annotation.RegisterReloadHook;
 import com.songoda.ultimatetimber.api.event.TreeFellEvent;
 import com.songoda.ultimatetimber.api.manager.ChoppingManager;
 import com.songoda.ultimatetimber.api.manager.SaplingManager;

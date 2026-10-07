@@ -1,6 +1,6 @@
 package com.songoda.ultimatetimber.manager;
 
-import com.songoda.core.vortexcore.compatibility.folia.SchedulerUtils;
+import com.songoda.core.compatibility.folia.SchedulerUtils;
 import com.songoda.ultimatetimber.UltimateTimber;
 import com.songoda.ultimatetimber.api.manager.SaplingManager;
 import com.songoda.ultimatetimber.api.manager.TreeDefinitionManager;

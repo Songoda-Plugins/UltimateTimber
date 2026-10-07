@@ -5,5 +5,5 @@ songodaPipeline(
     songodaDeploy: true,
     songodaBetaDeploy: true,
     mavenReleaseScope: 'api'
-    
+
 )

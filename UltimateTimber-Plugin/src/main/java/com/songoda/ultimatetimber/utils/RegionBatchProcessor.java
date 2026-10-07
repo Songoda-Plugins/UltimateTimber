@@ -1,6 +1,6 @@
 package com.songoda.ultimatetimber.utils;
 
-import com.songoda.core.vortexcore.compatibility.folia.SchedulerUtils;
+import com.songoda.core.compatibility.folia.SchedulerUtils;
 import org.bukkit.Location;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;

@@ -1,9 +1,9 @@
 package com.songoda.ultimatetimber.database.service;
 
-import com.songoda.core.vortexcore.compatibility.folia.SchedulerTask;
-import com.songoda.core.vortexcore.compatibility.folia.SchedulerUtils;
-import com.songoda.core.vortexcore.hooks.internal.ReloadHook;
-import com.songoda.core.vortexcore.vinject.annotation.RegisterReloadHook;
+import com.songoda.core.compatibility.folia.SchedulerTask;
+import com.songoda.core.compatibility.folia.SchedulerUtils;
+import com.songoda.core.hooks.internal.ReloadHook;
+import com.songoda.core.vinject.annotation.RegisterReloadHook;
 import com.songoda.ultimatetimber.UltimateTimber;
 import com.songoda.ultimatetimber.config.TimberConfig;
 import com.songoda.ultimatetimber.database.entity.PlayerTreeStats;

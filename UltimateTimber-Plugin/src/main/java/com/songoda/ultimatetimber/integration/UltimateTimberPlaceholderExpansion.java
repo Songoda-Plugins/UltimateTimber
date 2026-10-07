@@ -1,6 +1,6 @@
 package com.songoda.ultimatetimber.integration;
 
-import com.songoda.core.vortexcore.vinject.annotation.PlaceholderApiExpansion;
+import com.songoda.core.vinject.annotation.PlaceholderApiExpansion;
 import com.songoda.ultimatetimber.UltimateTimber;
 import com.songoda.ultimatetimber.database.service.PlayerTreeStatsLeaderboardService;
 import com.songoda.ultimatetimber.listener.PlayerTreeStatsListener;

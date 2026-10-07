@@ -1,6 +1,6 @@
 package com.songoda.ultimatetimber.integration;
 
-import com.songoda.core.vortexcore.compatibility.folia.SchedulerUtils;
+import com.songoda.core.compatibility.folia.SchedulerUtils;
 import com.songoda.ultimatetimber.UltimateTimber;
 import com.songoda.ultimatetimber.config.TimberConfig;
 import net.vortexdevelopment.vinject.annotation.Inject;

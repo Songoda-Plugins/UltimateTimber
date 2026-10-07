@@ -1,9 +1,9 @@
 package com.songoda.ultimatetimber.listener;
 
 import com.songoda.core.SongodaPlugin;
-import com.songoda.core.vortexcore.compatibility.ServerVersion;
-import com.songoda.core.vortexcore.compatibility.folia.SchedulerUtils;
-import com.songoda.core.vortexcore.vinject.annotation.RegisterListener;
+import com.songoda.core.compatibility.ServerVersion;
+import com.songoda.core.compatibility.folia.SchedulerUtils;
+import com.songoda.core.vinject.annotation.RegisterListener;
 import com.songoda.ultimatetimber.api.animation.TreeAnimation;
 import com.songoda.ultimatetimber.api.event.TreeDamageEvent;
 import com.songoda.ultimatetimber.api.manager.TreeAnimationManager;

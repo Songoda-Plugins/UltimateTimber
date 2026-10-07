@@ -1,6 +1,6 @@
 package com.songoda.ultimatetimber.database.repository;
 
-import com.songoda.core.vortexcore.vinject.database.PreloadedCrudRepository;
+import com.songoda.core.vinject.database.PreloadedCrudRepository;
 import com.songoda.ultimatetimber.database.entity.PlayerTreeStats;
 import net.vortexdevelopment.vinject.annotation.component.Repository;
 

@@ -1,6 +1,6 @@
 package com.songoda.ultimatetimber.database.entity;
 
-import com.songoda.core.vortexcore.vinject.database.cache.DefaultCacheKeys;
+import com.songoda.core.vinject.database.cache.DefaultCacheKeys;
 import lombok.Getter;
 import lombok.Setter;
 import net.vortexdevelopment.vinject.annotation.database.AutoLoad;

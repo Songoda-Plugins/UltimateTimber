@@ -24,11 +24,5 @@
             <version>${songoda.core.version}</version>
             <scope>provided</scope>
         </dependency>
-        <dependency>
-            <groupId>net.vortexdevelopment</groupId>
-            <artifactId>VortexCore</artifactId>
-            <version>${vortexcore.version}</version>
-            <scope>provided</scope>
-        </dependency>
     </dependencies>
 </project>

@@ -1,9 +1,9 @@
 package com.songoda.ultimatetimber.manager;
 
 import com.songoda.core.SongodaPlugin;
-import com.songoda.core.vortexcore.compatibility.folia.SchedulerUtils;
-import com.songoda.core.vortexcore.hooks.internal.ReloadHook;
-import com.songoda.core.vortexcore.vinject.annotation.RegisterReloadHook;
+import com.songoda.core.compatibility.folia.SchedulerUtils;
+import com.songoda.core.hooks.internal.ReloadHook;
+import com.songoda.core.vinject.annotation.RegisterReloadHook;
 import com.songoda.ultimatetimber.api.manager.PlacedBlockManager;
 import com.songoda.ultimatetimber.api.manager.TreeDefinitionManager;
 import com.songoda.ultimatetimber.api.manager.TreeDetectionManager;

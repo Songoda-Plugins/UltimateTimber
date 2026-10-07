@@ -6,7 +6,7 @@ import com.songoda.core.hooks.betonquest.BetonQuestHook;
 import com.songoda.core.hooks.ecojobs.EcoJobsHook;
 import com.songoda.core.hooks.ecoskills.EcoSkillsHook;
 import com.songoda.core.hooks.mmocore.MMOCoreHook;
-import com.songoda.core.vortexcore.vinject.annotation.RegisterListener;
+import com.songoda.core.vinject.annotation.RegisterListener;
 import com.songoda.ultimatetimber.api.event.TreeFellEvent;
 import com.songoda.ultimatetimber.config.TimberConfig;
 import com.songoda.ultimatetimber.config.entry.HooksConfig;

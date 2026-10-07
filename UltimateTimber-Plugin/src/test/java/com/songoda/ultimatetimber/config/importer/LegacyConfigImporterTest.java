@@ -78,6 +78,10 @@ class LegacyConfigImporterTest {
         assertEquals(500, modernConfig.getInt("Queued Block Replacement.Max Per Tick"));
         assertEquals("OAK_SAPLING", modernConfig.getString("Trees.oak.Sapling"));
 
+        String migratedText = Files.readString(configFile.toPath(), StandardCharsets.UTF_8);
+        assertTrue(migratedText.contains("\n\nQueued Block Replacement:\n"));
+        assertTrue(migratedText.contains("\n\nTrees:\n"));
+
         // Running importer again on already migrated config should return false
         assertFalse(importer.isLegacy(configFile));
         assertFalse(importer.importIfLegacy(configFile));
@@ -130,6 +134,8 @@ class LegacyConfigImporterTest {
         assertTrue(new File(dataFolder, "config-legacy-2.yml").exists());
 
         String migratedText = Files.readString(configFile.toPath(), StandardCharsets.UTF_8);
+        assertTrue(migratedText.contains("\n\nGlobal Loot:\n"));
+        assertTrue(migratedText.contains("\n\nRequired Axe:\n"));
 
         // The migrated file is read by VInject's line based YAML reader at startup,
         // so it must never contain a folded value on a continuation line.

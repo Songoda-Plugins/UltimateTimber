@@ -18,6 +18,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.Locale;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -33,6 +34,15 @@ public final class LegacyConfigImporter {
      * migration, so such files are re-decoded instead.
      */
     private static final Charset LEGACY_CHARSET = Charset.forName("windows-1252");
+    private static final Set<String> SECTION_BREAK_KEYS = Set.of(
+            "Fragile Blocks",
+            "Queued Block Replacement",
+            "Hooks",
+            "Statistics",
+            "Global Loot",
+            "Required Axe",
+            "Trees"
+    );
 
     private final File dataFolder;
     private final Logger logger = resolveLogger();
@@ -282,7 +292,28 @@ public final class LegacyConfigImporter {
      */
     private String renderModern(YamlConfiguration modern) {
         modern.options().width(Integer.MAX_VALUE);
-        return modern.saveToString();
+        String yaml = modern.saveToString();
+        StringBuilder formatted = new StringBuilder(yaml.length() + SECTION_BREAK_KEYS.size());
+        boolean previousLineBlank = true;
+
+        for (String line : yaml.split("\\R")) {
+            if (isSectionBreak(line) && formatted.length() > 0 && !previousLineBlank) {
+                formatted.append('\n');
+            }
+            formatted.append(line).append('\n');
+            previousLineBlank = line.isBlank();
+        }
+
+        return formatted.toString();
+    }
+
+    private boolean isSectionBreak(String line) {
+        if (line.isEmpty() || Character.isWhitespace(line.charAt(0))) {
+            return false;
+        }
+
+        int separator = line.indexOf(':');
+        return separator > 0 && SECTION_BREAK_KEYS.contains(line.substring(0, separator));
     }
 
     /**

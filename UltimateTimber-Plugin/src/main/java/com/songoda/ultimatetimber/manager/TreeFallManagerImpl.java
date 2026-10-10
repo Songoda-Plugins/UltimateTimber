@@ -168,12 +168,16 @@ public class TreeFallManagerImpl implements TreeFallManager, ReloadHook {
             return;
         }
 
+        int maxDamage = damageable.hasMaxDamage() ? damageable.getMaxDamage() : tool.getType().getMaxDurability();
+        if (maxDamage <= 0) {
+            return;
+        }
+
         Enchantment unbreaking = EnchantmentResolver.resolve(NamespacedKey.minecraft("unbreaking"));
         int unbreakingLevel = unbreaking != null ? tool.getEnchantmentLevel(unbreaking) : 0;
         int damageToApply = calculateDamageToApply(toolDamage, unbreakingLevel);
 
         int newDamage = damageable.getDamage() + damageToApply;
-        int maxDamage = damageable.hasMaxDamage() ? damageable.getMaxDamage() : tool.getType().getMaxDurability();
 
         if (newDamage >= maxDamage) {
             player.getInventory().setItemInMainHand(null);
@@ -206,7 +210,8 @@ public class TreeFallManagerImpl implements TreeFallManager, ReloadHook {
 
         ItemMeta meta = tool.getItemMeta();
         if (meta instanceof Damageable damageable) {
-            return (damageable.getDamage() + toolDamage) >= tool.getType().getMaxDurability();
+            int maxDamage = damageable.hasMaxDamage() ? damageable.getMaxDamage() : tool.getType().getMaxDurability();
+            return maxDamage > 0 && damageable.getDamage() + toolDamage >= maxDamage;
         }
         return false;
     }

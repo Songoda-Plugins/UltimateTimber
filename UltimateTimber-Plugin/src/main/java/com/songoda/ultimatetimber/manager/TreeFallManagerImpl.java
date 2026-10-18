@@ -164,7 +164,7 @@ public class TreeFallManagerImpl implements TreeFallManager, ReloadHook {
 
     private void applyToolDamage(Player player, ItemStack tool, short toolDamage) {
         ItemMeta meta = tool.getItemMeta();
-        if (!(meta instanceof Damageable damageable)) {
+        if (!(meta instanceof Damageable damageable) || meta.isUnbreakable()) {
             return;
         }
 
@@ -209,7 +209,7 @@ public class TreeFallManagerImpl implements TreeFallManager, ReloadHook {
         }
 
         ItemMeta meta = tool.getItemMeta();
-        if (meta instanceof Damageable damageable) {
+        if (meta instanceof Damageable damageable && !meta.isUnbreakable()) {
             int maxDamage = damageable.hasMaxDamage() ? damageable.getMaxDamage() : tool.getType().getMaxDurability();
             return maxDamage > 0 && damageable.getDamage() + toolDamage >= maxDamage;
         }

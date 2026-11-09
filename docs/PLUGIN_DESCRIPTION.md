@@ -1,6 +1,6 @@
-## UltimateTimber: animated Minecraft tree felling
+## A falling tree plugin for Minecraft woodcutting
 
-UltimateTimber is a Minecraft tree felling plugin that turns chopping a log into an animated falling tree. Configure tree detection, sapling replanting, tools, drops, and rewards to make woodcutting part of your survival server's progression.
+UltimateTimber is a Minecraft tree-felling plugin that turns chopping a log into an animated falling tree. Configure tree detection, sapling replanting, tools, drops, and rewards to make woodcutting part of your survival server's progression.
 
 ## Choose how trees fall
 
